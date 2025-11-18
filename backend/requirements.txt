@@ -1,0 +1,11 @@
+Django==5.2.8
+djangorestframework==3.16.1
+PyMySQL==1.1.2
+python-dotenv==1.2.1
+asgiref==3.10.0
+sqlparse==0.5.3
+tzdata==2025.2
+requests==2.32.3
+django-cors-headers==4.9.0
+
+

@@ -33,8 +33,8 @@ onMounted(async () => {
       <div class="status">
         <span class="dot" :class="{ online: chatStore.state.isBackendReachable }" />
         <span>{{ chatStore.state.isBackendReachable ? '后端在线' : '等待后端' }}</span>
-      </div>
-    </header>
+    </div>
+  </header>
 
     <main class="app-shell__body">
       <section class="panel agent-panel">
@@ -55,7 +55,7 @@ onMounted(async () => {
           @abort="handleAbort"
         />
       </section>
-    </main>
+  </main>
 
     <transition name="fade">
       <div v-if="chatStore.state.error" class="error-banner">
@@ -98,7 +98,7 @@ onMounted(async () => {
 }
 
 .status {
-  display: flex;
+    display: flex;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.95rem;
@@ -116,7 +116,7 @@ onMounted(async () => {
 .status .dot.online {
   background: #3de57f;
   box-shadow: 0 0 6px rgba(61, 229, 127, 0.6);
-}
+  }
 
 .app-shell__body {
   display: grid;
@@ -130,7 +130,7 @@ onMounted(async () => {
   padding: 1.25rem;
   box-shadow: var(--panel-shadow);
   min-height: 0;
-}
+  }
 
 .conversation-panel {
   display: flex;
@@ -146,7 +146,7 @@ onMounted(async () => {
   border-radius: 999px;
   background: rgba(239, 68, 68, 0.92);
   color: #fff;
-  display: flex;
+    display: flex;
   align-items: center;
   gap: 0.75rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);

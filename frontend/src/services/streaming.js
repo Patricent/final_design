@@ -7,6 +7,8 @@ export function openConversationStream(identifier, { onChunk, onError, onComplet
   const url = `${STREAM_BASE_URL}/conversations/${identifier}/stream/`
   const source = new EventSourcePolyfill(url, {
     withCredentials: false,
+    heartbeatTimeout: 120000, // 增加到120秒（2分钟），因为Qwen API可能需要较长时间
+    connectionTimeout: 30000, // 连接超时30秒
   })
 
   source.onmessage = (event) => {

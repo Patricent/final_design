@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, watch, ref } from 'vue'
+import { nextTick, watch, ref, computed } from 'vue'
 import MarkdownViewer from './MarkdownViewer.vue'
 
 const props = defineProps({
@@ -15,6 +15,11 @@ const props = defineProps({
 
 const containerRef = ref(null)
 
+// 计算所有消息内容的字符串，用于监听内容变化
+const messagesContent = computed(() => {
+  return props.messages.map((m) => m.content).join('|')
+})
+
 const scrollToBottom = () => {
   nextTick(() => {
     if (!containerRef.value) return
@@ -22,11 +27,23 @@ const scrollToBottom = () => {
   })
 }
 
+// 监听消息数组长度变化
 watch(
   () => props.messages.length,
   () => scrollToBottom(),
 )
 
+// 监听消息内容变化（流式更新时）
+watch(
+  messagesContent,
+  () => {
+    if (props.isStreaming) {
+      scrollToBottom()
+    }
+  },
+)
+
+// 监听流式状态变化
 watch(
   () => props.isStreaming,
   () => scrollToBottom(),
@@ -38,12 +55,16 @@ watch(
     <template v-if="messages.length">
       <article
         v-for="(message, index) in messages"
-        :key="index"
+        :key="`${index}-${message.content?.length || 0}`"
         class="bubble"
         :class="message.role"
       >
         <span class="role">{{ message.role === 'user' ? '用户' : '智能体' }}</span>
-        <MarkdownViewer :content="message.content" />
+        <MarkdownViewer 
+          :key="`md-${index}-${message.content?.length || 0}`" 
+          :content="message.content || ''" 
+          :is-streaming="isStreaming && index === messages.length - 1 && message.role === 'assistant'"
+        />
       </article>
     </template>
     <div v-else class="placeholder">

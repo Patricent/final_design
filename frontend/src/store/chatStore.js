@@ -16,7 +16,7 @@ const state = reactive({
   isBackendReachable: false,
   agentConfig: createEmptyAgent(),
   models: [],
-  messages: [],
+  messages: [], // 使用reactive数组，确保响应式
   conversationId: null,
   error: null,
 })
@@ -64,15 +64,21 @@ async function ensureConversation(agentId) {
 }
 
 function appendAssistantMessageChunk(chunk) {
+  // 只过滤明确的结束标记和null/undefined，保留所有其他内容（包括空白字符）
+  if (chunk === null || chunk === undefined || chunk === '[END]') return
+  
   const lastMessage = state.messages.at(-1)
   if (!lastMessage || lastMessage.role !== 'assistant') {
+    // 创建新的消息对象，确保响应式
     state.messages.push({
       role: 'assistant',
-      content: chunk,
+      content: chunk || '', // 确保是字符串
     })
     return
   }
-  lastMessage.content += chunk
+  // 使用字符串拼接确保内容完整累积
+  // 直接赋值确保Vue能检测到变化
+  lastMessage.content = (lastMessage.content || '') + (chunk || '')
 }
 
 function resetStreamState() {
@@ -153,7 +159,13 @@ export function useChatStore() {
         onChunk: appendAssistantMessageChunk,
         onError: (error) => {
           console.error('流式响应错误', error)
-          state.error = '流式响应异常，请稍后重试'
+          // 检查是否是超时错误
+          const errorMessage = error?.message || error?.toString() || ''
+          if (errorMessage.includes('timeout') || errorMessage.includes('No activity')) {
+            state.error = '请求超时，可能是模型响应时间较长，请稍后重试或检查网络连接'
+          } else {
+            state.error = '流式响应异常，请稍后重试'
+          }
           resetStreamState()
         },
         onComplete: () => {

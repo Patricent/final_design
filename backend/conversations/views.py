@@ -93,21 +93,28 @@ class ConversationStreamView(View):
             if use_qwen:
                 client = QwenClient()
                 try:
+                    # 直接使用流式生成器，实时yield每个chunk
+                    # 这样不会有内容丢失，也不需要等待完整回答
                     for chunk in client.stream_chunks(
                         system_prompt=agent.description or "",
                         history=history,
                         model=model_key,
                         temperature=agent.temperature or 0.7,
                     ):
+                        # 检查是否被中止
                         conv = Conversation.objects.get(pk=conversation.pk)
                         if conv.aborted:
                             yield "data: [END]\n\n"
                             return
-                        yield f"data: {chunk}\n\n"
-                        time.sleep(0.1)
-
+                        
+                        # 实时发送每个chunk
+                        if chunk:
+                            yield f"data: {chunk}\n\n"
+                    
+                    # 流式输出完成
                     yield "data: [END]\n\n"
                     return
+                        
                 except Exception as exc:
                     # 调用失败时，将错误信息通过流返回给前端
                     error_msg = f"调用 Qwen 模型失败：{exc}"

@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Iterable, List, Dict, Any
 
 import requests
@@ -97,14 +98,63 @@ class QwenClient:
         history: List[Dict[str, Any]],
         model: str,
         temperature: float = 0.7,
-        chunk_size: int = 80,
     ) -> Iterable[str]:
         """
-        伪流式接口：一次性向 Qwen 请求完整回答，然后在本地切成小段依次 yield。
+        真正的流式接口：使用 Qwen API 的 stream=True 参数，实时接收并yield内容。
+        参考：https://bailian.console.aliyun.com/?spm=5176.29597918.J_SEsSjsNv72yRuRFS2VknO.2.18667b08b8VYep&tab=doc#/doc/?type=model&url=2866129
         """
-        full_text = self.generate_text(system_prompt, history, model=model, temperature=temperature)
-        for i in range(0, len(full_text), chunk_size):
-            yield full_text[i : i + chunk_size]
+        url = f"{self.base_url}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        payload: Dict[str, Any] = {
+            "model": model,
+            "messages": self._build_messages(system_prompt, history),
+            "temperature": temperature,
+            "stream": True,  # 启用真正的流式输出
+        }
+
+        try:
+            # 使用stream=True进行流式请求
+            resp = requests.post(url, json=payload, headers=headers, timeout=120, stream=True)
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            raise RuntimeError(f"Qwen 流式接口请求失败：{exc}") from exc
+
+        # 解析SSE格式的流式响应
+        # 格式：data: {"choices":[{"delta":{"content":"..."}}]}
+        for line in resp.iter_lines():
+            if not line:
+                continue
+            
+            # SSE格式：data: {...} 或 data: [DONE]
+            line_str = line.decode('utf-8')
+            if not line_str.startswith('data: '):
+                continue
+            
+            data_str = line_str[6:]  # 移除 "data: " 前缀
+            
+            # 检查是否结束
+            if data_str.strip() == '[DONE]':
+                break
+            
+            try:
+                # 解析JSON
+                data = json.loads(data_str)
+                
+                # 提取content
+                # Qwen API流式响应格式：{"choices":[{"delta":{"content":"..."}}]}
+                choices = data.get("choices", [])
+                if choices:
+                    delta = choices[0].get("delta", {})
+                    content = delta.get("content", "")
+                    if content:
+                        yield content
+            except (json.JSONDecodeError, KeyError, Exception) as e:
+                # 忽略解析错误，继续处理下一行
+                # 某些行可能是空数据或格式不标准
+                continue
 
 
 

@@ -28,7 +28,11 @@ const handleCardClick = (agentId) => {
 }
 
 const handleEdit = (agentId) => {
-  router.push({ name: 'agent-workspace', params: { id: agentId } })
+  router.push({
+    name: 'agent-workspace',
+    params: { id: agentId },
+    query: { edit: '1' },
+  })
 }
 
 const handleDelete = async (agentId) => {

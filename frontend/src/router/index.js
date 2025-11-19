@@ -15,13 +15,16 @@ const router = createRouter({
       path: '/agents/new',
       name: 'agent-create',
       component: AgentWorkspaceView,
-      props: { isNew: true },
+      props: { isNew: true, showEditor: true },
     },
     {
       path: '/agents/:id(\\d+)',
       name: 'agent-workspace',
       component: AgentWorkspaceView,
-      props: (route) => ({ id: Number(route.params.id) }),
+      props: (route) => ({
+        id: Number(route.params.id),
+        showEditor: route.query.edit === '1',
+      }),
     },
     {
       path: '/:pathMatch(.*)*',

@@ -14,12 +14,26 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showEditor: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const router = useRouter()
 const chatStore = useChatStore()
 
 const isNewAgent = computed(() => props.isNew || !props.id)
+const shouldShowEditor = computed(() => props.showEditor || props.isNew || !props.id)
+// 编辑模式和新建模式只显示编辑区，不显示对话
+const shouldShowConversation = computed(() => {
+  // 如果是新建模式，不显示对话
+  if (props.isNew || !props.id) return false
+  // 如果是编辑模式（showEditor=true），不显示对话
+  if (props.showEditor) return false
+  // 默认查看对话模式，显示对话
+  return true
+})
 
 const bootstrapWorkspace = async () => {
   await chatStore.bootstrap()
@@ -51,6 +65,23 @@ const handleBack = () => {
   router.push({ name: 'agent-home' })
 }
 
+const handleEnterEdit = () => {
+  if (!props.id) return
+  router.push({
+    name: 'agent-workspace',
+    params: { id: props.id },
+    query: { edit: '1' },
+  })
+}
+
+const handleViewConversation = () => {
+  if (!props.id) return
+  router.push({
+    name: 'agent-workspace',
+    params: { id: props.id },
+  })
+}
+
 onMounted(bootstrapWorkspace)
 
 watch(
@@ -75,21 +106,39 @@ watch(
 <template>
   <div class="workspace">
     <header class="workspace__header">
-      <div>
+      <div class="workspace__meta">
         <button class="ghost-btn" type="button" @click="handleBack">
           ← 返回智能体广场
         </button>
         <h1>{{ chatStore.state.agentConfig.name || (isNewAgent ? '新的智能体' : `智能体 #${id}`) }}</h1>
         <p>设定角色、选择模型，立即开启对话</p>
       </div>
-      <div class="status">
-        <span class="dot" :class="{ online: chatStore.state.isBackendReachable }" />
-        <span>{{ chatStore.state.isBackendReachable ? '后端在线' : '等待后端' }}</span>
+      <div class="workspace__actions">
+        <div class="status">
+          <span class="dot" :class="{ online: chatStore.state.isBackendReachable }" />
+          <span>{{ chatStore.state.isBackendReachable ? '后端在线' : '等待后端' }}</span>
+        </div>
+        <button
+          v-if="!isNewAgent && !shouldShowEditor"
+          class="ghost-btn"
+          type="button"
+          @click="handleEnterEdit"
+        >
+          编辑智能体
+        </button>
+        <button
+          v-else-if="!isNewAgent && shouldShowEditor"
+          class="ghost-btn"
+          type="button"
+          @click="handleViewConversation"
+        >
+          返回对话
+        </button>
       </div>
     </header>
 
-    <main class="workspace__body">
-      <section class="panel agent-panel">
+    <main class="workspace__body" :class="{ 'single-column': !shouldShowEditor || !shouldShowConversation }">
+      <section v-if="shouldShowEditor" class="panel agent-panel">
         <AgentForm
           :models="chatStore.state.models"
           :loading="chatStore.state.isLoading"
@@ -98,7 +147,7 @@ watch(
         />
       </section>
 
-      <section class="panel conversation-panel">
+      <section v-if="shouldShowConversation" class="panel conversation-panel">
         <ConversationPanel
           :messages="chatStore.state.messages"
           :is-streaming="chatStore.state.isStreaming"
@@ -140,6 +189,10 @@ watch(
   gap: 1.25rem;
 }
 
+.workspace__meta {
+  max-width: 60%;
+}
+
 .workspace__header h1 {
   margin: 0.5rem 0 0;
   font-size: 1.5rem;
@@ -168,6 +221,12 @@ watch(
   color: var(--color-text-muted);
 }
 
+.workspace__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .status .dot {
   width: 10px;
   height: 10px;
@@ -185,6 +244,10 @@ watch(
   display: grid;
   grid-template-columns: 380px 1fr;
   gap: 1.5rem;
+}
+
+.workspace__body.single-column {
+  grid-template-columns: 1fr;
 }
 
 .panel {

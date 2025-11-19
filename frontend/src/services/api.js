@@ -32,6 +32,9 @@ export const AgentAPI = {
     const { data } = await apiClient.post('/agents/', payload)
     return normalizeAgent(data)
   },
+  async deleteAgent(agentId) {
+    await apiClient.delete(`/agents/${agentId}/`)
+  },
   async startConversation(payload) {
     const { data } = await apiClient.post('/conversations/', payload)
     return data

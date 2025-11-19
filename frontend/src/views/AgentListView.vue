@@ -7,6 +7,7 @@ const router = useRouter()
 const agents = ref([])
 const isLoading = ref(false)
 const errorMessage = ref('')
+const deletingId = ref(null)
 
 const fetchAgents = async () => {
   isLoading.value = true
@@ -23,6 +24,30 @@ const fetchAgents = async () => {
 
 const handleCardClick = (agentId) => {
   router.push({ name: 'agent-workspace', params: { id: agentId } })
+}
+
+const handleEdit = (agentId) => {
+  router.push({ name: 'agent-workspace', params: { id: agentId } })
+}
+
+const handleDelete = async (agentId) => {
+  if (deletingId.value) {
+    return
+  }
+  const confirmed = window.confirm('确定要删除该智能体吗？此操作不可恢复。')
+  if (!confirmed) return
+
+  deletingId.value = agentId
+  errorMessage.value = ''
+  try {
+    await AgentAPI.deleteAgent(agentId)
+    agents.value = agents.value.filter((item) => item.id !== agentId)
+  } catch (error) {
+    console.error('删除智能体失败', error)
+    errorMessage.value = '删除失败，请稍后再试'
+  } finally {
+    deletingId.value = null
+  }
 }
 
 onMounted(fetchAgents)
@@ -68,8 +93,23 @@ onMounted(fetchAgents)
             {{ agent.description || '暂无描述' }}
           </p>
           <footer class="agent-card__footer">
-            <span>温度：{{ agent.temperature ?? '--' }}</span>
-            <span class="agent-card__link">查看对话 →</span>
+            <div class="agent-card__meta">
+              <span>温度：{{ agent.temperature ?? '--' }}</span>
+              <span class="agent-card__link">查看对话 →</span>
+            </div>
+            <div class="agent-card__actions">
+              <button class="ghost-btn" type="button" @click.stop="handleEdit(agent.id)">
+                编辑
+              </button>
+              <button
+                class="ghost-btn danger"
+                type="button"
+                :disabled="deletingId === agent.id"
+                @click.stop="handleDelete(agent.id)"
+              >
+                {{ deletingId === agent.id ? '删除中...' : '删除' }}
+              </button>
+            </div>
           </footer>
         </article>
       </div>
@@ -198,15 +238,56 @@ onMounted(fetchAgents)
 
 .agent-card__footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.75rem;
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+.agent-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .agent-card__link {
   color: #818cf8;
   font-weight: 600;
+}
+
+.agent-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ghost-btn {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--color-text);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.ghost-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ghost-btn.danger {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.ghost-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ghost-btn.danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12);
 }
 
 @media (max-width: 768px) {

@@ -80,6 +80,11 @@ class AgentDetailView(APIView):
         serializer = AgentSerializer(agent)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def delete(self, request, pk):
+        agent = get_object_or_404(Agent, pk=pk)
+        agent.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ModelListView(APIView):
     """

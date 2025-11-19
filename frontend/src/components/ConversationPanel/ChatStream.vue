@@ -88,10 +88,12 @@ watch(
 }
 
 .bubble {
-  padding: 0.85rem;
+  padding: 1rem 1.25rem;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .bubble.user {

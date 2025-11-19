@@ -26,9 +26,11 @@ const compiled = computed(() => {
 
 <style scoped>
 .markdown {
-  line-height: 1.6;
+  line-height: 1.8;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  word-break: break-word; /* 长单词自动换行 */
+  max-width: 100%; /* 确保内容不会溢出 */
 }
 
 .markdown :deep(h1),
@@ -63,27 +65,65 @@ const compiled = computed(() => {
 }
 
 .markdown :deep(p) {
-  margin: 0.5rem 0;
-  line-height: 1.7;
+  margin: 0.75rem 0;
+  line-height: 1.8;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* 确保第一个和最后一个段落没有额外边距 */
+.markdown :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.markdown :deep(p:last-child) {
+  margin-bottom: 0;
 }
 
 .markdown :deep(ul),
 .markdown :deep(ol) {
-  margin: 0.5rem 0;
-  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+  padding-left: 1.75rem;
 }
 
 .markdown :deep(li) {
-  margin: 0.25rem 0;
-  line-height: 1.6;
+  margin: 0.4rem 0;
+  line-height: 1.7;
+  word-wrap: break-word;
+}
+
+/* 列表项内的段落 */
+.markdown :deep(li > p) {
+  margin: 0.4rem 0;
+}
+
+.markdown :deep(li > p:first-child) {
+  margin-top: 0;
+}
+
+.markdown :deep(li > p:last-child) {
+  margin-bottom: 0;
 }
 
 .markdown :deep(blockquote) {
   margin: 0.75rem 0;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border-left: 4px solid rgba(106, 93, 255, 0.5);
   background: rgba(106, 93, 255, 0.05);
   border-radius: 4px;
+  line-height: 1.7;
+}
+
+.markdown :deep(blockquote p) {
+  margin: 0.5rem 0;
+}
+
+.markdown :deep(blockquote p:first-child) {
+  margin-top: 0;
+}
+
+.markdown :deep(blockquote p:last-child) {
+  margin-bottom: 0;
 }
 
 .markdown :deep(pre) {
@@ -91,8 +131,10 @@ const compiled = computed(() => {
   padding: 1rem;
   border-radius: 10px;
   overflow-x: auto;
-  margin: 0.75rem 0;
+  margin: 1rem 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: pre; /* 代码块保持原始格式 */
+  word-wrap: normal;
 }
 
 .markdown :deep(pre code) {
@@ -130,7 +172,7 @@ const compiled = computed(() => {
 }
 
 .markdown :deep(hr) {
-  margin: 1rem 0;
+  margin: 1.5rem 0;
   border: none;
   border-top: 1px solid var(--border-color);
 }
@@ -138,14 +180,17 @@ const compiled = computed(() => {
 .markdown :deep(table) {
   width: 100%;
   border-collapse: collapse;
-  margin: 0.75rem 0;
+  margin: 1rem 0;
+  word-wrap: break-word;
 }
 
 .markdown :deep(th),
 .markdown :deep(td) {
   border: 1px solid var(--border-color);
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
   text-align: left;
+  word-wrap: break-word;
+  line-height: 1.6;
 }
 
 .markdown :deep(th) {

@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -55,6 +56,28 @@ class AgentView(APIView):
         serializer.is_valid(raise_exception=True)
         agent = serializer.save()
 
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AgentListView(APIView):
+    """
+    返回所有已创建的智能体，供主界面展示。
+    """
+
+    def get(self, request):
+        agents = Agent.objects.order_by("-updated_at")
+        serializer = AgentSerializer(agents, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AgentDetailView(APIView):
+    """
+    返回单个智能体详情。
+    """
+
+    def get(self, request, pk):
+        agent = get_object_or_404(Agent, pk=pk)
+        serializer = AgentSerializer(agent)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

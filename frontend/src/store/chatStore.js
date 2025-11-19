@@ -2,17 +2,19 @@ import { reactive } from 'vue'
 import { AgentAPI } from '../services/api'
 import { openConversationStream } from '../services/streaming'
 
+const createEmptyAgent = () => ({
+  id: null,
+  name: '',
+  description: '',
+  modelKey: '',
+  temperature: 0.7,
+})
+
 const state = reactive({
   isLoading: false,
   isStreaming: false,
   isBackendReachable: false,
-  agentConfig: {
-    id: null,
-    name: '',
-    description: '',
-    modelKey: '',
-    temperature: 0.7,
-  },
+  agentConfig: createEmptyAgent(),
   models: [],
   messages: [],
   conversationId: null,
@@ -33,6 +35,19 @@ async function fetchModels() {
     console.warn('模型列表获取失败，等待后端可用', error)
     state.isBackendReachable = false
   }
+}
+
+function assignAgentConfig(payload = {}) {
+  Object.assign(state.agentConfig, createEmptyAgent(), payload)
+  if (!state.agentConfig.modelKey && state.models.length > 0) {
+    state.agentConfig.modelKey = state.models[0].key
+  }
+}
+
+function resetConversationState() {
+  state.messages = []
+  state.conversationId = null
+  resetStreamState()
 }
 
 async function ensureConversation(agentId) {
@@ -77,13 +92,9 @@ export function useChatStore() {
     state.isLoading = true
     try {
       const agent = await AgentAPI.upsertAgent(payload)
-      state.agentConfig = {
-        ...state.agentConfig,
-        ...payload,
-        id: agent.id ?? state.agentConfig.id,
-      }
-      state.messages = []
-      state.conversationId = null
+      assignAgentConfig(agent)
+      resetConversationState()
+      return agent
     } catch (error) {
       state.error = error?.response?.data ?? error.message
       console.error('保存智能体失败', error)
@@ -91,6 +102,30 @@ export function useChatStore() {
     } finally {
       state.isLoading = false
     }
+  }
+
+  const loadAgent = async (agentId) => {
+    if (!agentId) {
+      prepareNewAgent()
+      return
+    }
+    state.isLoading = true
+    try {
+      const agent = await AgentAPI.getAgent(agentId)
+      assignAgentConfig(agent)
+      resetConversationState()
+    } catch (error) {
+      state.error = error?.response?.data ?? error.message
+      console.error('加载智能体失败', error)
+      throw error
+    } finally {
+      state.isLoading = false
+    }
+  }
+
+  const prepareNewAgent = () => {
+    assignAgentConfig(createEmptyAgent())
+    resetConversationState()
   }
 
   const sendMessage = async (content) => {
@@ -148,6 +183,8 @@ export function useChatStore() {
     state,
     bootstrap,
     upsertAgent,
+    loadAgent,
+    prepareNewAgent,
     sendMessage,
     abortActiveStream,
   }

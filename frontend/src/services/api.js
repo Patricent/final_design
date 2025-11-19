@@ -7,14 +7,30 @@ export const apiClient = axios.create({
   timeout: 15000,
 })
 
+const normalizeAgent = (agent = {}) => ({
+  id: agent.id ?? null,
+  name: agent.name ?? '',
+  description: agent.description ?? '',
+  modelKey: agent.model_key ?? agent.modelKey ?? '',
+  temperature: agent.temperature ?? 0.7,
+})
+
 export const AgentAPI = {
   async listModels() {
     const { data } = await apiClient.get('/agents/models/')
     return data ?? []
   },
+  async listAgents() {
+    const { data } = await apiClient.get('/agents/list/')
+    return (data ?? []).map(normalizeAgent)
+  },
+  async getAgent(agentId) {
+    const { data } = await apiClient.get(`/agents/${agentId}/`)
+    return normalizeAgent(data)
+  },
   async upsertAgent(payload) {
     const { data } = await apiClient.post('/agents/', payload)
-    return data
+    return normalizeAgent(data)
   },
   async startConversation(payload) {
     const { data } = await apiClient.post('/conversations/', payload)

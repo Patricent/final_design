@@ -77,8 +77,10 @@ function appendAssistantMessageChunk(chunk) {
     return
   }
   // 使用字符串拼接确保内容完整累积
-  // 直接赋值确保Vue能检测到变化
-  lastMessage.content = (lastMessage.content || '') + (chunk || '')
+  // 直接修改对象的content属性，Vue的响应式系统会自动检测
+  // 使用nextTick确保更新在下一个tick执行，避免频繁更新
+  const currentContent = lastMessage.content || ''
+  lastMessage.content = currentContent + (chunk || '')
 }
 
 function resetStreamState() {

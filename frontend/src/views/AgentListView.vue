@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgentAPI } from '../services/api'
 
@@ -8,6 +8,7 @@ const agents = ref([])
 const isLoading = ref(false)
 const errorMessage = ref('')
 const deletingId = ref(null)
+const searchTerm = ref('')
 
 const fetchAgents = async () => {
   isLoading.value = true
@@ -50,6 +51,20 @@ const handleDelete = async (agentId) => {
   }
 }
 
+const filteredAgents = computed(() => {
+  if (!searchTerm.value?.trim()) {
+    return agents.value
+  }
+  const keyword = searchTerm.value.trim().toLowerCase()
+  return agents.value.filter((agent) => {
+    const haystack = [agent.name, agent.description, agent.modelKey]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    return haystack.includes(keyword)
+  })
+})
+
 onMounted(fetchAgents)
 </script>
 
@@ -66,6 +81,14 @@ onMounted(fetchAgents)
     </header>
 
     <section class="page__content">
+      <div class="toolbar">
+        <input
+          v-model.trim="searchTerm"
+          class="search-input"
+          type="search"
+          placeholder="搜索智能体名称 / 描述 / 模型..."
+        />
+      </div>
       <div v-if="errorMessage" class="state state--error">
         {{ errorMessage }}
       </div>
@@ -75,9 +98,12 @@ onMounted(fetchAgents)
       <div v-else-if="agents.length === 0" class="state">
         还没有任何智能体，点击右上角按钮开始创建吧。
       </div>
+      <div v-else-if="filteredAgents.length === 0" class="state">
+        未找到匹配的智能体，试试调整搜索关键词。
+      </div>
       <div v-else class="agent-grid">
         <article
-          v-for="agent in agents"
+          v-for="agent in filteredAgents"
           :key="agent.id"
           class="agent-card"
           role="button"
@@ -173,6 +199,29 @@ onMounted(fetchAgents)
   border-radius: 16px;
   background: var(--panel-bg);
   box-shadow: var(--panel-shadow);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: min(320px, 100%);
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  background: var(--panel-bg-muted);
+  color: var(--color-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .state {

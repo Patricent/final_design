@@ -169,7 +169,7 @@ watch(
 
 <style scoped>
 .workspace {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -244,6 +244,8 @@ watch(
   display: grid;
   grid-template-columns: 380px 1fr;
   gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .workspace__body.single-column {
@@ -256,11 +258,14 @@ watch(
   padding: 1.25rem;
   box-shadow: var(--panel-shadow);
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .conversation-panel {
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .error-banner {

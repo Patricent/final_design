@@ -185,16 +185,16 @@ onMounted(fetchAgents)
   justify-content: center;
   padding: 0.75rem 1.5rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--accent-color);
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .primary-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.45);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
 }
 
 .page__content {
@@ -224,8 +224,8 @@ onMounted(fetchAgents)
 
 .search-input:focus {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.6);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: rgba(var(--accent-rgb), 0.65);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
 }
 
 .state {
@@ -247,8 +247,8 @@ onMounted(fetchAgents)
 .agent-card {
   padding: 1.25rem;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -259,7 +259,7 @@ onMounted(fetchAgents)
 .agent-card:hover,
 .agent-card:focus-visible {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(var(--accent-rgb), 0.65);
   transform: translateY(-2px);
 }
 
@@ -278,8 +278,8 @@ onMounted(fetchAgents)
 .agent-card__model {
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
+  background: rgba(var(--accent-rgb), 0.16);
+  color: rgba(15, 23, 42, 0.72);
   font-size: 0.85rem;
 }
 
@@ -305,7 +305,7 @@ onMounted(fetchAgents)
 }
 
 .agent-card__link {
-  color: #818cf8;
+  color: rgba(15, 23, 42, 0.7);
   font-weight: 600;
 }
 
@@ -315,8 +315,8 @@ onMounted(fetchAgents)
 }
 
 .ghost-btn {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: transparent;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.5);
   color: var(--color-text);
   border-radius: 999px;
   padding: 0.35rem 0.9rem;
@@ -326,7 +326,7 @@ onMounted(fetchAgents)
 }
 
 .ghost-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .ghost-btn.danger {

@@ -39,10 +39,7 @@ const handleKeydown = (event) => {
 <template>
   <div class="conversation-panel">
     <header>
-      <div>
-        <h2>对话面板</h2>
-        <p>支持 Markdown 渲染与实时流式输出</p>
-      </div>
+
       <AbortButton :disabled="!isStreaming" @click="emit('abort')" />
     </header>
 

@@ -34,34 +34,38 @@
   --color-text: var(--vt-c-text-light-1);
   --color-text-muted: rgba(60, 60, 60, 0.66);
 
-  --app-bg: radial-gradient(circle at top, #f6f7ff 0%, #edf2ff 45%, #fefefe 100%);
-  --panel-bg: rgba(255, 255, 255, 0.9);
-  --panel-bg-muted: rgba(255, 255, 255, 0.7);
+  --app-bg: radial-gradient(circle at top, #f7fbff 0%, #f4f2ff 46%, #ffffff 100%);
+  --panel-bg: rgba(255, 255, 255, 0.92);
+  --panel-bg-muted: rgba(255, 255, 255, 0.78);
   --panel-shadow: 0 25px 45px rgba(15, 23, 42, 0.08);
   --border-color: rgba(15, 23, 42, 0.08);
-  --accent-color: linear-gradient(135deg, #409cff, #6a5dff);
+  --accent-1: #7dd3fc;
+  --accent-2: #c4b5fd;
+  --accent-rgb: 125, 211, 252;
+  --accent-color: linear-gradient(135deg, var(--accent-1), var(--accent-2));
 
   --section-gap: 160px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
+    /* 统一使用浅色主调（忽略系统深色偏好），避免界面在不同设备上“变暗” */
+    --color-background: var(--vt-c-white);
+    --color-background-soft: var(--vt-c-white-soft);
+    --color-background-mute: var(--vt-c-white-mute);
 
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
+    --color-border: var(--vt-c-divider-light-2);
+    --color-border-hover: var(--vt-c-divider-light-1);
 
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-1);
-    --color-text-muted: var(--vt-c-text-dark-2);
+    --color-heading: var(--vt-c-text-light-1);
+    --color-text: var(--vt-c-text-light-1);
+    --color-text-muted: rgba(60, 60, 60, 0.66);
 
-    --app-bg: radial-gradient(circle at top, #0f172a 0%, #111827 40%, #0b1221 100%);
-    --panel-bg: rgba(17, 24, 39, 0.9);
-    --panel-bg-muted: rgba(17, 24, 39, 0.7);
-    --panel-shadow: 0 25px 45px rgba(0, 0, 0, 0.35);
-    --border-color: rgba(255, 255, 255, 0.08);
+    --app-bg: radial-gradient(circle at top, #f7fbff 0%, #f4f2ff 46%, #ffffff 100%);
+    --panel-bg: rgba(255, 255, 255, 0.92);
+    --panel-bg-muted: rgba(255, 255, 255, 0.78);
+    --panel-shadow: 0 25px 45px rgba(15, 23, 42, 0.08);
+    --border-color: rgba(15, 23, 42, 0.08);
   }
 }
 

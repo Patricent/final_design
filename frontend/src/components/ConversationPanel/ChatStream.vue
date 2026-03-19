@@ -82,8 +82,7 @@ watch(
       </div>
     </template>
     <div v-else class="placeholder">
-      <p>还没有消息，先在左侧配置智能体，然后开始对话吧。</p>
-      <p>支持多轮上下文、中止对话、Markdown 代码块等特性。</p>
+
     </div>
   </div>
 </template>
@@ -152,7 +151,7 @@ watch(
 
 /* 用户消息气泡：右侧，蓝色系 */
 .message-bubble.user {
-  background: linear-gradient(135deg, #409cff, #6a5dff);
+  background: var(--accent-color);
   color: #ffffff;
   border-bottom-right-radius: 4px; /* 右下角小圆角，像微信/iMessage */
 }
@@ -164,29 +163,13 @@ watch(
 
 /* 智能体消息气泡：左侧，灰色系 */
 .message-bubble.assistant {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.92);
   color: var(--color-text);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-color);
   border-bottom-left-radius: 4px; /* 左下角小圆角 */
 }
 
-/* 在暗色模式下优化智能体消息 */
-@media (prefers-color-scheme: dark) {
-  .message-bubble.assistant {
-    background: rgba(40, 40, 40, 0.9);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.9);
-  }
-}
-
-/* 在亮色模式下优化智能体消息 */
-@media (prefers-color-scheme: light) {
-  .message-bubble.assistant {
-    background: rgba(240, 240, 240, 0.9);
-    border-color: rgba(0, 0, 0, 0.1);
-    color: rgba(0, 0, 0, 0.85);
-  }
-}
+/* 统一浅色主调：避免随系统偏好切换导致气泡变暗 */
 
 .placeholder {
   text-align: center;

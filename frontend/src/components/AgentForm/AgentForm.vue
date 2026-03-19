@@ -145,7 +145,7 @@ textarea {
 
 button.primary {
   border: none;
-  background: linear-gradient(135deg, #409cff, #6a5dff);
+  background: var(--accent-color);
   color: white;
   border-radius: 12px;
   padding: 0.75rem;

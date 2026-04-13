@@ -1,84 +1,57 @@
-import MarkdownIt from 'markdown-it'
-
-const md = new MarkdownIt({
-  linkify: true,
-  breaks: true,
-  html: true,
-  typographer: true,
-})
+/**
+ * 与参考文件 frontend/Chat.vue 中 renderMarkdown 相同的替换顺序与规则，
+ * 便于对话区 Markdown 展示一致；流式过程中每次更新都对当前完整文本调用即可（与 Chat.vue 一致）。
+ * 渲染前对原文做 HTML 转义，降低 XSS 风险（参考实现未转义）。
+ */
+function escapeHtml(text) {
+  if (!text) return ''
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 
 /**
- * 修复流式更新时的不完整Markdown语法
- * 例如：**text 被截断时，临时处理为 **text**（临时闭合）
+ * @param {string} content
+ * @param {boolean} _isStreaming 保留参数，与 ChatStream / MarkdownViewer 的 API 一致；逻辑与 Chat.vue 相同，不区分流式与否
  */
-function fixIncompleteMarkdown(content) {
+export function renderMarkdown(content, _isStreaming = false) {
   if (!content) return ''
-  
-  let fixed = content
-  
-  // 修复不完整的加粗标记 **text 或 text**
-  // 统计未配对的 ** 数量
-  const boldMatches = fixed.match(/\*\*/g)
-  if (boldMatches && boldMatches.length % 2 !== 0) {
-    // 有奇数个 **，说明有未闭合的标记
-    // 在末尾添加 ** 临时闭合（如果最后一个字符不是 *）
-    if (!fixed.endsWith('*')) {
-      fixed = fixed + '**'
-    } else if (!fixed.endsWith('**')) {
-      fixed = fixed + '*'
-    }
-  }
-  
-  // 修复不完整的斜体标记 *text 或 text*（但不在 ** 内部）
-  // 这个比较复杂，暂时不处理，因为可能误判
-  
-  // 修复不完整的代码块标记 ```code
-  const codeBlockMatches = fixed.match(/```/g)
-  if (codeBlockMatches && codeBlockMatches.length % 2 !== 0) {
-    // 有奇数个 ```，说明代码块未闭合
-    // 在末尾添加 ```
-    if (!fixed.endsWith('`')) {
-      fixed = fixed + '\n```'
-    } else if (!fixed.endsWith('``')) {
-      fixed = fixed + '`'
-    } else if (!fixed.endsWith('```')) {
-      fixed = fixed + '`'
-    }
-  }
-  
-  // 修复不完整的行内代码标记 `code
-  // 统计未配对的 ` 数量（排除 ```）
-  // 先移除所有 ```，然后统计剩余的 `
-  const withoutCodeBlocks = fixed.replace(/```[\s\S]*?```/g, '')
-  const inlineCodeMatches = withoutCodeBlocks.match(/`/g)
-  if (inlineCodeMatches && inlineCodeMatches.length % 2 !== 0) {
-    // 有奇数个 `，说明行内代码未闭合
-    if (!fixed.endsWith('`')) {
-      fixed = fixed + '`'
-    }
-  }
-  
-  return fixed
-}
 
-export function renderMarkdown(content, isStreaming = false) {
-  if (!content) return ''
-  
   try {
-    // 如果是流式更新，先修复不完整的Markdown语法
-    const fixedContent = isStreaming ? fixIncompleteMarkdown(content) : content
-    return md.render(fixedContent)
+    const text = escapeHtml(String(content))
+
+    return (
+      text
+        // 代码块
+        .replace(/```([\s\S]*?)```/g, '<pre class="code-block"><code>$1</code></pre>')
+        // 行内代码
+        .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+        // 粗体
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // 斜体
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // 标题
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // 列表
+        .replace(/^\* (.*$)/gim, '<li>$1</li>')
+        .replace(/^- (.*$)/gim, '<li>$1</li>')
+        // 将连续的 li 包在 ul 中
+        .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+        // 链接
+        .replace(
+          /\[([^\]]+)\]\(([^)]+)\)/g,
+          '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+        )
+        // 换行
+        .replace(/\n/g, '<br>')
+    )
   } catch (error) {
-    console.warn('Markdown渲染失败，使用原始内容:', error)
-    // 如果渲染失败，至少转义HTML特殊字符并保留换行
-    return content
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')
-      .replace(/\n/g, '<br>')
+    console.warn('Markdown 渲染失败，使用转义文本:', error)
+    return escapeHtml(String(content)).replace(/\n/g, '<br>')
   }
 }
-
-

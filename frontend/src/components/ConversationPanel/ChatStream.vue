@@ -74,8 +74,10 @@ watch(
         :class="message.role"
       >
         <div class="message-bubble" :class="message.role">
-          <MarkdownViewer 
-            :content="message.content || ''" 
+          <span v-if="message.role === 'user'" class="user-plain">{{ message.content }}</span>
+          <MarkdownViewer
+            v-else
+            :content="message.content || ''"
             :is-streaming="isStreaming && index === messages.length - 1 && message.role === 'assistant'"
           />
         </div>
@@ -158,6 +160,10 @@ watch(
 
 /* 确保用户消息中的文字是白色 */
 .message-bubble.user * {
+  color: #ffffff !important;
+}
+
+.message-bubble.user .user-plain {
   color: #ffffff !important;
 }
 

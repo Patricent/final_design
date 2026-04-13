@@ -15,7 +15,13 @@ from .models import Conversation, Message
 
 
 def _agent_usable_by(user, agent: Agent) -> bool:
+    if agent.is_deleted:
+        return False
     return agent.owner_id == user.id or agent.is_public
+
+
+def _conversation_agent_active(conversation) -> bool:
+    return not conversation.agent.is_deleted
 
 
 class ConversationCreateView(APIView):
@@ -33,7 +39,7 @@ class ConversationCreateView(APIView):
         if not agent_id:
             return Response({"detail": "agent_id 是必填项"}, status=status.HTTP_400_BAD_REQUEST)
 
-        agent = get_object_or_404(Agent, pk=agent_id)
+        agent = get_object_or_404(Agent.objects.filter(is_deleted=False), pk=agent_id)
         if not _agent_usable_by(request.user, agent):
             return Response({"detail": "无权使用该智能体"}, status=status.HTTP_403_FORBIDDEN)
         conv = Conversation.objects.create(agent=agent, started_by=request.user)
@@ -56,6 +62,11 @@ class MessageCreateView(APIView):
 
     def post(self, request, pk: int):
         conversation = get_object_or_404(Conversation, pk=pk, started_by=request.user)
+        if not _conversation_agent_active(conversation):
+            return Response(
+                {"detail": "该智能体已不可用"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         content = request.data.get("content", "").strip()
         if not content:
@@ -76,6 +87,11 @@ class ConversationAbortView(APIView):
 
     def post(self, request, pk: int):
         conversation = get_object_or_404(Conversation, pk=pk, started_by=request.user)
+        if not _conversation_agent_active(conversation):
+            return Response(
+                {"detail": "该智能体已不可用"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         conversation.aborted = True
         conversation.save(update_fields=["aborted"])
         return Response({"status": "aborted"}, status=status.HTTP_200_OK)
@@ -94,6 +110,8 @@ class ConversationStreamView(View):
         if not user:
             return HttpResponse("Unauthorized", status=401)
         conversation = get_object_or_404(Conversation, pk=pk, started_by=user)
+        if not _conversation_agent_active(conversation):
+            return HttpResponse("Forbidden", status=403)
         agent = conversation.agent
 
         def event_stream():

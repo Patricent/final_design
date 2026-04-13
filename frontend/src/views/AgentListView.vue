@@ -98,6 +98,13 @@ onMounted(fetchAgents)
             退出
           </button>
         </div>
+        <RouterLink
+          v-if="authState.user?.is_staff"
+          class="secondary-btn"
+          :to="{ name: 'admin-agents' }"
+        >
+          管理后台
+        </RouterLink>
         <RouterLink class="secondary-btn" :to="{ name: 'agent-square' }">智能体广场</RouterLink>
         <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
           + 创建新智能体

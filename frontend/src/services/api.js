@@ -53,6 +53,14 @@ const normalizeAgent = (agent = {}) => ({
   ownerUsername: agent.owner_username ?? agent.ownerUsername ?? '',
 })
 
+const normalizeAdminAgent = (agent = {}) => ({
+  ...normalizeAgent(agent),
+  isDeleted: Boolean(agent.is_deleted ?? agent.isDeleted),
+  deletedAt: agent.deleted_at ?? agent.deletedAt ?? null,
+  createdAt: agent.created_at ?? agent.createdAt ?? null,
+  updatedAt: agent.updated_at ?? agent.updatedAt ?? null,
+})
+
 export const AgentAPI = {
   async listModels() {
     const { data } = await apiClient.get('/agents/models/')
@@ -90,5 +98,28 @@ export const AgentAPI = {
   async abortConversation(conversationId) {
     const { data } = await apiClient.post(`/conversations/${conversationId}/abort/`)
     return data
+  },
+}
+
+export const AdminAgentAPI = {
+  async listAll() {
+    const { data } = await apiClient.get('/agents/admin/all/')
+    return (data ?? []).map(normalizeAdminAgent)
+  },
+  async listRecycle() {
+    const { data } = await apiClient.get('/agents/admin/recycle/')
+    return (data ?? []).map(normalizeAdminAgent)
+  },
+  async unpublish(agentId) {
+    const { data } = await apiClient.post(`/agents/admin/${agentId}/unpublish/`)
+    return normalizeAdminAgent(data)
+  },
+  async softDelete(agentId) {
+    const { data } = await apiClient.post(`/agents/admin/${agentId}/soft-delete/`)
+    return normalizeAdminAgent(data)
+  },
+  async restore(agentId) {
+    const { data } = await apiClient.post(`/agents/admin/${agentId}/restore/`)
+    return normalizeAdminAgent(data)
   },
 }

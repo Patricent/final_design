@@ -52,7 +52,9 @@ class AgentView(APIView):
         agent_id = incoming.get("id")
         instance = None
         if agent_id:
-            instance = Agent.objects.filter(pk=agent_id, owner=request.user).first()
+            instance = Agent.objects.filter(
+                pk=agent_id, owner=request.user, is_deleted=False
+            ).first()
 
         serializer = AgentSerializer(instance=instance, data=incoming)
         serializer.is_valid(raise_exception=True)
@@ -70,7 +72,7 @@ class AgentSquareListView(APIView):
 
     def get(self, request):
         agents = (
-            Agent.objects.filter(is_public=True)
+            Agent.objects.filter(is_public=True, is_deleted=False)
             .select_related("owner")
             .order_by("-updated_at")
         )
@@ -86,7 +88,10 @@ class AgentListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        agents = Agent.objects.filter(owner=request.user).order_by("-updated_at")
+        agents = (
+            Agent.objects.filter(owner=request.user, is_deleted=False)
+            .order_by("-updated_at")
+        )
         serializer = AgentSerializer(agents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -100,7 +105,9 @@ class AgentDetailView(APIView):
 
     def get(self, request, pk):
         agent = get_object_or_404(
-            Agent.objects.filter(Q(owner=request.user) | Q(is_public=True)),
+            Agent.objects.filter(is_deleted=False).filter(
+                Q(owner=request.user) | Q(is_public=True)
+            ),
             pk=pk,
         )
         serializer = AgentSerializer(agent)

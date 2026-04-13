@@ -161,3 +161,35 @@ npm run dev
 - 确认 Qwen API 密钥已正确配置（如果使用 Qwen 模型）
 
 
+管理员设置
+下面用三种常见方式设置，任选一种即可。
+
+方式一：创建超级用户（推荐第一次用）
+在项目里打开终端，进入 backend 目录（有 manage.py 的那一层），执行：
+
+python manage.py createsuperuser
+按提示输入用户名、邮箱（可空）、密码。
+这样创建出来的账号 默认就是 is_staff=True（也是 is_superuser=True），用这个账号在你们前端 正常登录，就能看到「管理后台」并访问 /admin/agents。
+
+方式二：已有账号，只想把它改成管理员
+同样在 backend 目录：
+
+python manage.py shell
+在交互里输入（把 你的用户名 换成真实用户名）：
+
+from django.contrib.auth.models import Useru = User.objects.get(username="你的用户名")
+u.is_staff = True
+u.save()
+exit()
+保存后，用这个账号重新登录一次（或刷新页面让前端重新拉 /auth/me/），就会带上管理员权限。
+
+方式三：用 Django 自带的 Admin 网页改
+如果你已经有一个超级用户，可以：
+
+浏览器打开：http://127.0.0.1:8000/admin/（或你的后端地址 + /admin/）
+用超级用户登录
+进入 Users，点开要设成管理员的账号
+勾选 Staff status（职员状态），保存
+怎么确认已经生效？
+前端：登录后顶栏应出现 「管理后台」，并能打开 /admin/agents。
+若仍没有：确认改的是 当前登录的这个用户名，并已 重新登录 或清缓存后再进。

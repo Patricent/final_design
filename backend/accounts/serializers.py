@@ -11,8 +11,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "nickname", "avatar", "bio")
-        read_only_fields = ("id", "username")
+        fields = ("id", "username", "email", "nickname", "avatar", "bio", "is_staff")
+        read_only_fields = ("id", "username", "is_staff")
 
     def get_nickname(self, obj):
         p = getattr(obj, "profile", None)

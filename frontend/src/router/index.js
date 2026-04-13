@@ -6,7 +6,9 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import ProfileEditView from '../views/ProfileEditView.vue'
 import AgentSquareView from '../views/AgentSquareView.vue'
-import { isLoggedIn } from '../store/authStore'
+import AdminAgentsView from '../views/AdminAgentsView.vue'
+import { apiClient } from '../services/api'
+import { authState, isLoggedIn } from '../store/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +34,12 @@ const router = createRouter({
       path: '/square',
       name: 'agent-square',
       component: AgentSquareView,
+    },
+    {
+      path: '/admin/agents',
+      name: 'admin-agents',
+      component: AdminAgentsView,
+      meta: { requiresAdmin: true },
     },
     {
       path: '/profile',
@@ -60,7 +68,7 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (to.meta.public) {
     if (isLoggedIn() && (to.name === 'login' || to.name === 'register')) {
       return { path: '/' }
@@ -69,6 +77,17 @@ router.beforeEach((to) => {
   }
   if (!isLoggedIn()) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (!authState.user) {
+    try {
+      const { data } = await apiClient.get('/auth/me/')
+      authState.user = data
+    } catch {
+      /* 忽略，各页自行处理未登录 */
+    }
+  }
+  if (to.meta.requiresAdmin && !authState.user?.is_staff) {
+    return { path: '/' }
   }
   return true
 })

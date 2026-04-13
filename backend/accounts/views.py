@@ -18,6 +18,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token["username"] = user.username
+        token["is_staff"] = user.is_staff
         profile = getattr(user, "profile", None)
         token["nickname"] = (profile.nickname if profile else "") or ""
         return token

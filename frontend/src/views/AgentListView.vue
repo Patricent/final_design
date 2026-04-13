@@ -93,8 +93,10 @@ onMounted(fetchAgents)
         <div class="user-bar">
           <img v-if="authState.user?.avatar" :src="authState.user.avatar" alt="" class="user-bar__avatar" />
           <span class="user-bar__name">{{ displayName }}</span>
-          <RouterLink class="ghost-link" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
-          <button type="button" class="ghost-link" @click="logout">退出</button>
+          <RouterLink class="nav-action-btn" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
+          <button type="button" class="nav-action-btn nav-action-btn--danger" @click="logout">
+            退出
+          </button>
         </div>
         <RouterLink class="secondary-btn" :to="{ name: 'agent-square' }">智能体广场</RouterLink>
         <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
@@ -211,6 +213,8 @@ onMounted(fetchAgents)
 .user-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.5rem;
   font-size: 0.9rem;
   color: var(--color-text-muted);
@@ -222,16 +226,6 @@ onMounted(fetchAgents)
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--border-color);
-}
-
-.ghost-link {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  text-decoration: underline;
-  font-size: inherit;
 }
 
 .secondary-btn {

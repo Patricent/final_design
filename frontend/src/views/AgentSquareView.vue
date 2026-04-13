@@ -67,9 +67,11 @@ onMounted(fetchSquare)
         <div class="user-bar">
           <img v-if="authState.user?.avatar" :src="authState.user.avatar" alt="" class="user-bar__avatar" />
           <span class="user-bar__name">{{ displayName }}</span>
-          <RouterLink class="ghost-link" :to="{ name: 'agent-home' }">我的智能体</RouterLink>
-          <RouterLink class="ghost-link" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
-          <button type="button" class="ghost-link" @click="logout">退出</button>
+          <RouterLink class="nav-action-btn" :to="{ name: 'agent-home' }">我的智能体</RouterLink>
+          <RouterLink class="nav-action-btn" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
+          <button type="button" class="nav-action-btn nav-action-btn--danger" @click="logout">
+            退出
+          </button>
         </div>
         <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">+ 创建智能体</RouterLink>
       </div>
@@ -169,16 +171,6 @@ onMounted(fetchSquare)
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--border-color);
-}
-
-.ghost-link {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  text-decoration: underline;
-  font-size: inherit;
 }
 
 .primary-btn {

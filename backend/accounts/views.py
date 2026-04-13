@@ -79,8 +79,7 @@ class UserApiKeysView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request):
-        UserProfile.objects.get_or_create(user=request.user)
-        profile = request.user.profile
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
         ser = UserApiKeysUpdateSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         d = ser.validated_data

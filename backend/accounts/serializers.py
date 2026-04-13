@@ -67,11 +67,11 @@ class UserSerializer(serializers.ModelSerializer):
 class UserApiKeysUpdateSerializer(serializers.Serializer):
     """更新 LLM API Key：勾选 clear 则清除；否则非空字符串为覆盖；未传则不修改。"""
 
-    qwen_api_key = serializers.CharField(required=False, allow_blank=True, max_length=600)
+    qwen_api_key = serializers.CharField(required=False, allow_blank=True, max_length=2048)
     qwen_clear = serializers.BooleanField(required=False, default=False)
-    deepseek_api_key = serializers.CharField(required=False, allow_blank=True, max_length=600)
+    deepseek_api_key = serializers.CharField(required=False, allow_blank=True, max_length=2048)
     deepseek_clear = serializers.BooleanField(required=False, default=False)
-    gpt_api_key = serializers.CharField(required=False, allow_blank=True, max_length=600)
+    gpt_api_key = serializers.CharField(required=False, allow_blank=True, max_length=2048)
     gpt_clear = serializers.BooleanField(required=False, default=False)
 
 

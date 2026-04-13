@@ -7,15 +7,20 @@ from .models import UserProfile
 class UserSerializer(serializers.ModelSerializer):
     nickname = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+    bio = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "nickname", "avatar")
+        fields = ("id", "username", "email", "nickname", "avatar", "bio")
         read_only_fields = ("id", "username")
 
     def get_nickname(self, obj):
         p = getattr(obj, "profile", None)
         return p.nickname if p else ""
+
+    def get_bio(self, obj):
+        p = getattr(obj, "profile", None)
+        return p.bio if p else ""
 
     def get_avatar(self, obj):
         p = getattr(obj, "profile", None)

@@ -93,6 +93,7 @@ onMounted(fetchAgents)
         <div class="user-bar">
           <img v-if="authState.user?.avatar" :src="authState.user.avatar" alt="" class="user-bar__avatar" />
           <span class="user-bar__name">{{ displayName }}</span>
+          <RouterLink class="ghost-link" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
           <button type="button" class="ghost-link" @click="logout">退出</button>
         </div>
         <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">

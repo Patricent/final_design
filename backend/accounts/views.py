@@ -53,13 +53,16 @@ class MeView(APIView):
     def patch(self, request):
         user = request.user
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        if "nickname" in request.data:
-            profile.nickname = request.data.get("nickname") or ""
+        data = request.data
+        if "nickname" in data:
+            profile.nickname = data.get("nickname") or ""
+        if "bio" in data:
+            profile.bio = data.get("bio") or ""
         if "avatar" in request.FILES:
             profile.avatar = request.FILES["avatar"]
         profile.save()
-        if "email" in request.data:
-            user.email = request.data.get("email") or ""
+        if "email" in data:
+            user.email = data.get("email") or ""
             user.save(update_fields=["email"])
         return Response(UserSerializer(user, context={"request": request}).data)
 

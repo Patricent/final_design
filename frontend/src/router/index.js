@@ -4,6 +4,7 @@ import AgentListView from '../views/AgentListView.vue'
 import AgentWorkspaceView from '../views/AgentWorkspaceView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import ProfileEditView from '../views/ProfileEditView.vue'
 import { isLoggedIn } from '../store/authStore'
 
 const router = createRouter({
@@ -25,6 +26,11 @@ const router = createRouter({
       path: '/',
       name: 'agent-home',
       component: AgentListView,
+    },
+    {
+      path: '/profile',
+      name: 'profile-edit',
+      component: ProfileEditView,
     },
     {
       path: '/agents/new',

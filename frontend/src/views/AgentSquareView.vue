@@ -81,7 +81,7 @@ onMounted(fetchSquare)
             管理后台
           </RouterLink>
           <RouterLink class="header-square-btn" :to="{ name: 'agent-home' }">我的智能体</RouterLink>
-          <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">+ 创建智能体</RouterLink>
+          <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">+ 创建新智能体</RouterLink>
         </div>
       </div>
     </header>

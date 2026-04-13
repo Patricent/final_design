@@ -1,4 +1,6 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -65,6 +67,42 @@ class MeView(APIView):
             user.email = data.get("email") or ""
             user.save(update_fields=["email"])
         return Response(UserSerializer(user, context={"request": request}).data)
+
+
+class ChangePasswordView(APIView):
+    """已登录用户修改密码：需校验当前密码。"""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        old_password = request.data.get("old_password") or ""
+        new_password = request.data.get("new_password") or ""
+        new_password_confirm = request.data.get("new_password_confirm") or ""
+        user = request.user
+
+        if not user.check_password(old_password):
+            return Response(
+                {"old_password": ["当前密码不正确"]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if new_password != new_password_confirm:
+            return Response(
+                {"new_password_confirm": ["两次输入的新密码不一致"]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if old_password == new_password:
+            return Response(
+                {"new_password": ["新密码不能与当前密码相同"]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as exc:
+            return Response({"new_password": list(exc.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+        return Response({"detail": "密码已更新，请使用新密码重新登录"})
 
 
 class RefreshTokenView(TokenRefreshView):

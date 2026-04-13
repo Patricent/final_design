@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiClient } from '../services/api'
-import { authState } from '../store/authStore'
+import { authState, clearTokens } from '../store/authStore'
 
 const router = useRouter()
 
@@ -15,6 +15,13 @@ const loading = ref(false)
 const loadError = ref('')
 const saveError = ref('')
 const fileInputRef = ref(null)
+
+const oldPassword = ref('')
+const newPassword = ref('')
+const newPasswordConfirm = ref('')
+const pwdLoading = ref(false)
+const pwdError = ref('')
+const pwdOk = ref('')
 
 const loadProfile = async () => {
   loadError.value = ''
@@ -67,6 +74,50 @@ const submit = async () => {
   }
 }
 
+const submitPassword = async () => {
+  pwdError.value = ''
+  pwdOk.value = ''
+  if (!oldPassword.value || !newPassword.value) {
+    pwdError.value = '请填写当前密码和新密码'
+    return
+  }
+  if (newPassword.value !== newPasswordConfirm.value) {
+    pwdError.value = '两次新密码不一致'
+    return
+  }
+  pwdLoading.value = true
+  try {
+    await apiClient.post('/auth/change-password/', {
+      old_password: oldPassword.value,
+      new_password: newPassword.value,
+      new_password_confirm: newPasswordConfirm.value,
+    })
+    pwdOk.value = '密码已更新，请重新登录'
+    oldPassword.value = ''
+    newPassword.value = ''
+    newPasswordConfirm.value = ''
+    clearTokens()
+    setTimeout(() => {
+      router.replace({ name: 'login', query: {} })
+    }, 800)
+  } catch (e) {
+    const d = e?.response?.data
+    if (typeof d === 'object' && d) {
+      const parts = []
+      for (const [k, v] of Object.entries(d)) {
+        if (Array.isArray(v)) parts.push(...v.map(String))
+        else if (typeof v === 'string') parts.push(v)
+        else parts.push(`${k}: ${JSON.stringify(v)}`)
+      }
+      pwdError.value = parts[0] || '修改密码失败'
+    } else {
+      pwdError.value = '修改密码失败'
+    }
+  } finally {
+    pwdLoading.value = false
+  }
+}
+
 onMounted(loadProfile)
 </script>
 
@@ -75,7 +126,7 @@ onMounted(loadProfile)
     <header class="page__header">
       <div>
         <h1>编辑资料</h1>
-        <p>可修改昵称、头像、邮箱与个人介绍</p>
+        <p>可修改昵称、头像、邮箱、个人介绍与登录密码</p>
       </div>
       <button type="button" class="ghost" @click="router.push({ name: 'agent-home' })">返回</button>
     </header>
@@ -126,7 +177,31 @@ onMounted(loadProfile)
         <p v-if="saveError" class="msg msg--error">{{ saveError }}</p>
 
         <button type="submit" class="primary" :disabled="loading">
-          {{ loading ? '保存中…' : '保存' }}
+          {{ loading ? '保存中…' : '保存资料' }}
+        </button>
+      </form>
+    </section>
+
+    <section v-if="!loadError" class="card card--secondary">
+      <h2 class="card-title">修改密码</h2>
+      <p class="hint">修改成功后将退出登录，请用新密码重新登录。</p>
+      <form class="pwd-form" @submit.prevent="submitPassword">
+        <label class="field">
+          <span>当前密码</span>
+          <input v-model="oldPassword" type="password" autocomplete="current-password" />
+        </label>
+        <label class="field">
+          <span>新密码</span>
+          <input v-model="newPassword" type="password" autocomplete="new-password" />
+        </label>
+        <label class="field">
+          <span>确认新密码</span>
+          <input v-model="newPasswordConfirm" type="password" autocomplete="new-password" />
+        </label>
+        <p v-if="pwdError" class="msg msg--error">{{ pwdError }}</p>
+        <p v-if="pwdOk" class="msg msg--ok">{{ pwdOk }}</p>
+        <button type="submit" class="secondary" :disabled="pwdLoading">
+          {{ pwdLoading ? '提交中…' : '更新密码' }}
         </button>
       </form>
     </section>
@@ -175,11 +250,24 @@ onMounted(loadProfile)
 
 .card {
   max-width: 560px;
-  margin: 0 auto;
+  margin: 0 auto 1.25rem;
   padding: 1.5rem;
   border-radius: 16px;
   background: var(--panel-bg);
   box-shadow: var(--panel-shadow);
+}
+
+.card--secondary {
+  margin-top: 0;
+}
+
+.card-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.pwd-form {
+  margin-top: 0.5rem;
 }
 
 .avatar-row {
@@ -279,6 +367,10 @@ textarea {
   color: #dc2626;
 }
 
+.msg--ok {
+  color: #15803d;
+}
+
 .primary {
   margin-top: 0.5rem;
   width: 100%;
@@ -292,6 +384,23 @@ textarea {
 }
 
 .primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary {
+  margin-top: 0.5rem;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
+  background: var(--panel-bg-muted);
+  color: var(--color-text);
+}
+
+.secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

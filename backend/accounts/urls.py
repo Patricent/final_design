@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    ChangePasswordView,
     CustomTokenObtainPairView,
     MeView,
     RefreshTokenView,
@@ -12,4 +13,5 @@ urlpatterns = [
     path("login/", CustomTokenObtainPairView.as_view(), name="auth-login"),
     path("token/refresh/", RefreshTokenView.as_view(), name="auth-token-refresh"),
     path("me/", MeView.as_view(), name="auth-me"),
+    path("change-password/", ChangePasswordView.as_view(), name="auth-change-password"),
 ]

@@ -4,7 +4,10 @@ import AgentListView from '../views/AgentListView.vue'
 import AgentWorkspaceView from '../views/AgentWorkspaceView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
-import ProfileEditView from '../views/ProfileEditView.vue'
+import ProfileLayout from '../views/ProfileLayout.vue'
+import ProfileHomeView from '../views/ProfileHomeView.vue'
+import ProfileApiKeysView from '../views/ProfileApiKeysView.vue'
+import ProfilePasswordView from '../views/ProfilePasswordView.vue'
 import AgentSquareView from '../views/AgentSquareView.vue'
 import AdminAgentsView from '../views/AdminAgentsView.vue'
 import { apiClient } from '../services/api'
@@ -43,8 +46,25 @@ const router = createRouter({
     },
     {
       path: '/profile',
-      name: 'profile-edit',
-      component: ProfileEditView,
+      component: ProfileLayout,
+      redirect: { name: 'profile-home' },
+      children: [
+        {
+          path: 'home',
+          name: 'profile-home',
+          component: ProfileHomeView,
+        },
+        {
+          path: 'api-keys',
+          name: 'profile-api-keys',
+          component: ProfileApiKeysView,
+        },
+        {
+          path: 'password',
+          name: 'profile-password',
+          component: ProfilePasswordView,
+        },
+      ],
     },
     {
       path: '/agents/new',

@@ -116,7 +116,7 @@ onMounted(load)
           <img v-if="authState.user?.avatar" :src="authState.user.avatar" alt="" class="user-bar__avatar" />
           <span class="user-bar__name">{{ displayName }}</span>
           <RouterLink class="nav-action-btn" :to="{ name: 'agent-home' }">我的智能体</RouterLink>
-          <RouterLink class="nav-action-btn" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
+          <RouterLink class="nav-action-btn" :to="{ name: 'profile-home' }">编辑资料</RouterLink>
           <button type="button" class="nav-action-btn nav-action-btn--danger" @click="logout">
             退出
           </button>

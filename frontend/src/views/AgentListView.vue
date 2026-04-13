@@ -85,11 +85,11 @@ onMounted(fetchAgents)
 <template>
   <div class="page">
     <header class="page__header">
-      <div>
+      <div class="page__title-block">
         <h1>我的智能体</h1>
         <p>仅展示当前账号下的智能体，点击即可继续对话</p>
       </div>
-      <div class="page__header-actions">
+      <div class="page__header-aside">
         <div class="user-bar">
           <img v-if="authState.user?.avatar" :src="authState.user.avatar" alt="" class="user-bar__avatar" />
           <span class="user-bar__name">{{ displayName }}</span>
@@ -98,17 +98,19 @@ onMounted(fetchAgents)
             退出
           </button>
         </div>
-        <RouterLink
-          v-if="authState.user?.is_staff"
-          class="secondary-btn"
-          :to="{ name: 'admin-agents' }"
-        >
-          管理后台
-        </RouterLink>
-        <RouterLink class="secondary-btn" :to="{ name: 'agent-square' }">智能体广场</RouterLink>
-        <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
-          + 创建新智能体
-        </RouterLink>
+        <div class="page__cta-row">
+          <RouterLink
+            v-if="authState.user?.is_staff"
+            class="header-cta-admin"
+            :to="{ name: 'admin-agents' }"
+          >
+            管理后台
+          </RouterLink>
+          <RouterLink class="header-square-btn" :to="{ name: 'agent-square' }">智能体广场</RouterLink>
+          <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
+            + 创建新智能体
+          </RouterLink>
+        </div>
       </div>
     </header>
 
@@ -192,12 +194,17 @@ onMounted(fetchAgents)
 .page__header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 1.5rem;
   padding: 1.5rem;
   border-radius: 16px;
   background: var(--panel-bg);
   box-shadow: var(--panel-shadow);
-  gap: 1rem;
+}
+
+.page__title-block {
+  flex: 1;
+  min-width: 0;
 }
 
 .page__header h1 {
@@ -210,11 +217,20 @@ onMounted(fetchAgents)
   color: var(--color-text-muted);
 }
 
-.page__header-actions {
+.page__header-aside {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.75rem;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.page__cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
 }
 
 .user-bar {
@@ -228,14 +244,14 @@ onMounted(fetchAgents)
 }
 
 .user-bar__avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--border-color);
 }
 
-.secondary-btn {
+.header-cta-admin {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -245,13 +261,41 @@ onMounted(fetchAgents)
   background: var(--panel-bg-muted);
   color: var(--color-text);
   font-weight: 600;
+  font-size: 0.95rem;
   text-decoration: none;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
-.secondary-btn:hover {
+.header-cta-admin:hover {
   transform: translateY(-1px);
   border-color: rgba(var(--accent-rgb), 0.45);
+}
+
+/* 智能体广场：圆角矩形、约 2× 尺寸与字号 */
+.header-square-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 2.5rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--panel-bg-muted);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.header-square-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
 }
 
 .primary-btn {
@@ -263,6 +307,7 @@ onMounted(fetchAgents)
   background: var(--accent-color);
   color: #fff;
   font-weight: 600;
+  text-decoration: none;
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -440,7 +485,24 @@ onMounted(fetchAgents)
 
   .page__header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .page__header-aside {
+    align-items: stretch;
+  }
+
+  .user-bar {
+    justify-content: flex-start;
+  }
+
+  .page__cta-row {
+    justify-content: flex-start;
+  }
+
+  .header-square-btn {
+    font-size: 1.35rem;
+    padding: 1.15rem 1.75rem;
   }
 
   .page__content {

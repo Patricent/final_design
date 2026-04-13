@@ -28,7 +28,7 @@ class AgentSerializer(serializers.ModelSerializer):
 
 
 class AgentAdminSerializer(serializers.ModelSerializer):
-    """管理员列表：含软删除、公开状态与时间字段。"""
+    """管理员列表：含删除、公开状态与时间字段。"""
 
     owner_username = serializers.SerializerMethodField()
     owner_id = serializers.IntegerField(read_only=True)

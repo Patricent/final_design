@@ -10,7 +10,7 @@ from .serializers import AgentAdminSerializer
 
 
 class AdminAgentAllListView(APIView):
-    """管理员：所有未软删除的智能体。"""
+    """管理员：所有未删除的智能体。"""
 
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -24,7 +24,7 @@ class AdminAgentAllListView(APIView):
 
 
 class AdminAgentRecycleListView(APIView):
-    """管理员：回收站（仅已软删除）。"""
+    """管理员：回收站（仅已删除）。"""
 
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -38,7 +38,7 @@ class AdminAgentRecycleListView(APIView):
 
 
 class AdminAgentUnpublishView(APIView):
-    """广场下架：is_public -> False（不软删除）。"""
+    """广场下架：is_public -> False（不删除）。"""
 
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -50,7 +50,7 @@ class AdminAgentUnpublishView(APIView):
 
 
 class AdminAgentSoftDeleteView(APIView):
-    """软删除：标记 is_deleted，并自动下架。"""
+    """删除：标记 is_deleted，并自动下架。"""
 
     permission_classes = [IsAuthenticated, IsAdminUser]
 

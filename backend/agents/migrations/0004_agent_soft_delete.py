@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="agent",
             name="is_deleted",
-            field=models.BooleanField(db_index=True, default=False, verbose_name="已软删除"),
+            field=models.BooleanField(db_index=True, default=False, verbose_name="已删除"),
         ),
         migrations.AddField(
             model_name="agent",

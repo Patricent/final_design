@@ -21,7 +21,7 @@ class Agent(models.Model):
     model_key = models.CharField(max_length=100, blank=True)
     temperature = models.FloatField(default=0.7)
     is_public = models.BooleanField("公开到广场", default=False)
-    is_deleted = models.BooleanField("已软删除", default=False, db_index=True)
+    is_deleted = models.BooleanField("已删除", default=False, db_index=True)
     deleted_at = models.DateTimeField("删除时间", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

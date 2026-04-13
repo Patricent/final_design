@@ -75,14 +75,14 @@ const doUnpublish = async (id) => {
 }
 
 const doSoftDelete = async (id) => {
-  if (!window.confirm('确定软删除？用户侧与广场将不再展示，可在回收站恢复。')) return
+  if (!window.confirm('确定删除？用户与广场将不再展示，可在回收站恢复。')) return
   actingId.value = id
   errorMessage.value = ''
   try {
     await AdminAgentAPI.softDelete(id)
     await load()
   } catch (e) {
-    errorMessage.value = '软删除失败'
+    errorMessage.value = '删除失败'
   } finally {
     actingId.value = null
   }
@@ -109,7 +109,7 @@ onMounted(load)
     <header class="page__header">
       <div>
         <h1>管理员 · 智能体</h1>
-        <p>查看全站智能体；可下架广场展示或软删除（回收站可恢复）</p>
+        <p>查看全站智能体；可下架广场展示或删除（回收站可恢复）</p>
       </div>
       <div class="page__header-actions">
         <div class="user-bar">
@@ -201,7 +201,7 @@ onMounted(load)
                     :disabled="actingId === a.id"
                     @click="doSoftDelete(a.id)"
                   >
-                    软删除
+                    删除
                   </button>
                 </template>
                 <template v-else>

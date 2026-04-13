@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../store/authStore'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api'
 
@@ -6,6 +7,39 @@ export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
 })
+
+apiClient.interceptors.request.use((config) => {
+  const token = getAccessToken()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config
+    if (!original || error.response?.status !== 401 || original._retry) {
+      return Promise.reject(error)
+    }
+    original._retry = true
+    const refresh = getRefreshToken()
+    if (!refresh) {
+      clearTokens()
+      return Promise.reject(error)
+    }
+    try {
+      const { data } = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, { refresh })
+      setTokens(data.access, refresh)
+      original.headers.Authorization = `Bearer ${data.access}`
+      return apiClient(original)
+    } catch {
+      clearTokens()
+      return Promise.reject(error)
+    }
+  },
+)
 
 const normalizeAgent = (agent = {}) => ({
   id: agent.id ?? null,
@@ -50,5 +84,3 @@ export const AgentAPI = {
     return data
   },
 }
-
-

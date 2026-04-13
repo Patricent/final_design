@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Agent
 from .serializers import AgentSerializer
@@ -36,6 +37,8 @@ class AgentView(APIView):
     简化实现：前端只需要一个当前正在编辑的 Agent。
     """
 
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         # 兼容前端字段名：modelKey -> model_key
         incoming = request.data.copy()
@@ -44,28 +47,26 @@ class AgentView(APIView):
 
         # 如果传了 id 就更新，否则创建
         agent_id = incoming.get("id")
+        instance = None
         if agent_id:
-            try:
-                instance = Agent.objects.get(pk=agent_id)
-            except Agent.DoesNotExist:
-                instance = None
-        else:
-            instance = None
+            instance = Agent.objects.filter(pk=agent_id, owner=request.user).first()
 
         serializer = AgentSerializer(instance=instance, data=incoming)
         serializer.is_valid(raise_exception=True)
-        agent = serializer.save()
+        serializer.save(owner=request.user)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class AgentListView(APIView):
     """
-    返回所有已创建的智能体，供主界面展示。
+    返回当前登录用户拥有的智能体。
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        agents = Agent.objects.order_by("-updated_at")
+        agents = Agent.objects.filter(owner=request.user).order_by("-updated_at")
         serializer = AgentSerializer(agents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -75,13 +76,15 @@ class AgentDetailView(APIView):
     返回单个智能体详情。
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk):
-        agent = get_object_or_404(Agent, pk=pk)
+        agent = get_object_or_404(Agent, pk=pk, owner=request.user)
         serializer = AgentSerializer(agent)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, pk):
-        agent = get_object_or_404(Agent, pk=pk)
+        agent = get_object_or_404(Agent, pk=pk, owner=request.user)
         agent.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -90,6 +93,8 @@ class ModelListView(APIView):
     """
     返回可用大模型列表（当前为写死的假数据）。
     """
+
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         return Response(AVAILABLE_MODELS)

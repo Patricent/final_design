@@ -108,7 +108,7 @@ watch(
     <header class="workspace__header">
       <div class="workspace__meta">
         <button class="ghost-btn" type="button" @click="handleBack">
-          ← 返回智能体广场
+          ← 返回我的智能体
         </button>
         <h1>{{ chatStore.state.agentConfig.name || (isNewAgent ? '新的智能体' : `智能体 #${id}`) }}</h1>
         <p>设定角色、选择模型，立即开启对话</p>

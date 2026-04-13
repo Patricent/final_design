@@ -1,14 +1,21 @@
 import { EventSourcePolyfill } from 'event-source-polyfill'
+import { getAccessToken } from '../store/authStore'
 
 const STREAM_BASE_URL =
   import.meta.env.VITE_STREAM_BASE_URL ?? `${import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api'}`
 
 export function openConversationStream(identifier, { onChunk, onError, onComplete }) {
-  const url = `${STREAM_BASE_URL}/conversations/${identifier}/stream/`
+  const token = getAccessToken()
+  let url = `${STREAM_BASE_URL}/conversations/${identifier}/stream/`
+  if (token) {
+    const sep = url.includes('?') ? '&' : '?'
+    url = `${url}${sep}token=${encodeURIComponent(token)}`
+  }
+
   const source = new EventSourcePolyfill(url, {
     withCredentials: false,
-    heartbeatTimeout: 120000, // 增加到120秒（2分钟），因为Qwen API可能需要较长时间
-    connectionTimeout: 30000, // 连接超时30秒
+    heartbeatTimeout: 120000,
+    connectionTimeout: 30000,
   })
 
   source.onmessage = (event) => {
@@ -27,5 +34,3 @@ export function openConversationStream(identifier, { onChunk, onError, onComplet
 
   return () => source.close()
 }
-
-

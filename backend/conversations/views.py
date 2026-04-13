@@ -1,16 +1,17 @@
 import time
 
-from django.http import StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.jwt_utils import get_user_from_jwt_request
 from agents.models import Agent
 from integrations.llm_clients.qwen_client import QwenClient
 from .models import Conversation, Message
-from .serializers import ConversationSerializer
 
 
 class ConversationCreateView(APIView):
@@ -21,12 +22,14 @@ class ConversationCreateView(APIView):
     响应体示例：{"id": 1, "history": []}
     """
 
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         agent_id = request.data.get("agent_id")
         if not agent_id:
             return Response({"detail": "agent_id 是必填项"}, status=status.HTTP_400_BAD_REQUEST)
 
-        agent = get_object_or_404(Agent, pk=agent_id)
+        agent = get_object_or_404(Agent, pk=agent_id, owner=request.user)
         conv = Conversation.objects.create(agent=agent)
 
         data = {"id": conv.id, "history": []}
@@ -43,8 +46,10 @@ class MessageCreateView(APIView):
     响应体示例：{"stream_id": 1}
     """
 
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, pk: int):
-        conversation = get_object_or_404(Conversation, pk=pk)
+        conversation = get_object_or_404(Conversation, pk=pk, agent__owner=request.user)
 
         content = request.data.get("content", "").strip()
         if not content:
@@ -61,8 +66,10 @@ class ConversationAbortView(APIView):
     将会话标记为 aborted，流式接口会检测并停止输出。
     """
 
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, pk: int):
-        conversation = get_object_or_404(Conversation, pk=pk)
+        conversation = get_object_or_404(Conversation, pk=pk, agent__owner=request.user)
         conversation.aborted = True
         conversation.save(update_fields=["aborted"])
         return Response({"status": "aborted"}, status=status.HTTP_200_OK)
@@ -77,7 +84,10 @@ class ConversationStreamView(View):
     """
 
     def get(self, request, pk: int):
-        conversation = get_object_or_404(Conversation, pk=pk)
+        user = get_user_from_jwt_request(request)
+        if not user:
+            return HttpResponse("Unauthorized", status=401)
+        conversation = get_object_or_404(Conversation, pk=pk, agent__owner=user)
         agent = conversation.agent
 
         def event_stream():

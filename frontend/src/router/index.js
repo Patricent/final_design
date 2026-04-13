@@ -2,10 +2,25 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import AgentListView from '../views/AgentListView.vue'
 import AgentWorkspaceView from '../views/AgentWorkspaceView.vue'
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import { isLoggedIn } from '../store/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+      meta: { public: true },
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+      meta: { public: true },
+    },
     {
       path: '/',
       name: 'agent-home',
@@ -31,6 +46,19 @@ const router = createRouter({
       redirect: '/',
     },
   ],
+})
+
+router.beforeEach((to) => {
+  if (to.meta.public) {
+    if (isLoggedIn() && (to.name === 'login' || to.name === 'register')) {
+      return { path: '/' }
+    }
+    return true
+  }
+  if (!isLoggedIn()) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  return true
 })
 
 export default router

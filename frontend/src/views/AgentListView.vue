@@ -2,8 +2,18 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgentAPI } from '../services/api'
+import { authState, clearTokens } from '../store/authStore'
 
 const router = useRouter()
+
+const displayName = computed(
+  () => authState.user?.nickname || authState.user?.username || '用户',
+)
+
+const logout = () => {
+  clearTokens()
+  router.push({ name: 'login' })
+}
 const agents = ref([])
 const isLoading = ref(false)
 const errorMessage = ref('')
@@ -76,12 +86,19 @@ onMounted(fetchAgents)
   <div class="page">
     <header class="page__header">
       <div>
-        <h1>智能体广场</h1>
-        <p>查看并管理已经创建的智能体，点击即可继续对话</p>
+        <h1>我的智能体</h1>
+        <p>仅展示当前账号下的智能体，点击即可继续对话</p>
       </div>
-      <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
-        + 创建新智能体
-      </RouterLink>
+      <div class="page__header-actions">
+        <div class="user-bar">
+          <img v-if="authState.user?.avatar" :src="authState.user.avatar" alt="" class="user-bar__avatar" />
+          <span class="user-bar__name">{{ displayName }}</span>
+          <button type="button" class="ghost-link" @click="logout">退出</button>
+        </div>
+        <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
+          + 创建新智能体
+        </RouterLink>
+      </div>
     </header>
 
     <section class="page__content">
@@ -177,6 +194,39 @@ onMounted(fetchAgents)
 .page__header p {
   margin: 0.2rem 0 0;
   color: var(--color-text-muted);
+}
+
+.page__header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.user-bar__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.ghost-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
 }
 
 .primary-btn {

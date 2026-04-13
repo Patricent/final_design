@@ -7,6 +7,7 @@ class AgentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agent
         fields = ["id", "name", "description", "model_key", "temperature"]
+        read_only_fields = ["id"]
 
 
 

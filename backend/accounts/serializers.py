@@ -8,11 +8,32 @@ class UserSerializer(serializers.ModelSerializer):
     nickname = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     bio = serializers.SerializerMethodField()
+    has_qwen_api_key = serializers.SerializerMethodField()
+    has_deepseek_api_key = serializers.SerializerMethodField()
+    has_gpt_api_key = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "nickname", "avatar", "bio", "is_staff")
-        read_only_fields = ("id", "username", "is_staff")
+        fields = (
+            "id",
+            "username",
+            "email",
+            "nickname",
+            "avatar",
+            "bio",
+            "is_staff",
+            "has_qwen_api_key",
+            "has_deepseek_api_key",
+            "has_gpt_api_key",
+        )
+        read_only_fields = (
+            "id",
+            "username",
+            "is_staff",
+            "has_qwen_api_key",
+            "has_deepseek_api_key",
+            "has_gpt_api_key",
+        )
 
     def get_nickname(self, obj):
         p = getattr(obj, "profile", None)
@@ -29,6 +50,29 @@ class UserSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         url = p.avatar.url
         return request.build_absolute_uri(url) if request else url
+
+    def get_has_qwen_api_key(self, obj):
+        p = UserProfile.objects.filter(user=obj).first()
+        return bool(p and p.api_key_qwen_enc)
+
+    def get_has_deepseek_api_key(self, obj):
+        p = UserProfile.objects.filter(user=obj).first()
+        return bool(p and p.api_key_deepseek_enc)
+
+    def get_has_gpt_api_key(self, obj):
+        p = UserProfile.objects.filter(user=obj).first()
+        return bool(p and p.api_key_openai_enc)
+
+
+class UserApiKeysUpdateSerializer(serializers.Serializer):
+    """更新 LLM API Key：勾选 clear 则清除；否则非空字符串为覆盖；未传则不修改。"""
+
+    qwen_api_key = serializers.CharField(required=False, allow_blank=True, max_length=600)
+    qwen_clear = serializers.BooleanField(required=False, default=False)
+    deepseek_api_key = serializers.CharField(required=False, allow_blank=True, max_length=600)
+    deepseek_clear = serializers.BooleanField(required=False, default=False)
+    gpt_api_key = serializers.CharField(required=False, allow_blank=True, max_length=600)
+    gpt_clear = serializers.BooleanField(required=False, default=False)
 
 
 class RegisterSerializer(serializers.Serializer):

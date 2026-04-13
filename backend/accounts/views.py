@@ -9,8 +9,9 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .crypto_keys import encrypt_secret
 from .models import UserProfile
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserApiKeysUpdateSerializer, UserSerializer
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -51,7 +52,8 @@ class MeView(APIView):
 
     def get(self, request):
         UserProfile.objects.get_or_create(user=request.user)
-        return Response(UserSerializer(request.user, context={"request": request}).data)
+        user = User.objects.select_related("profile").get(pk=request.user.pk)
+        return Response(UserSerializer(user, context={"request": request}).data)
 
     def patch(self, request):
         user = request.user
@@ -67,6 +69,37 @@ class MeView(APIView):
         if "email" in data:
             user.email = data.get("email") or ""
             user.save(update_fields=["email"])
+        user = User.objects.select_related("profile").get(pk=user.pk)
+        return Response(UserSerializer(user, context={"request": request}).data)
+
+
+class UserApiKeysView(APIView):
+    """保存用户自有的大模型 API Key（加密存储）；未配置时使用系统环境变量中的默认 Key。"""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        UserProfile.objects.get_or_create(user=request.user)
+        profile = request.user.profile
+        ser = UserApiKeysUpdateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        d = ser.validated_data
+
+        updates = [
+            ("qwen_clear", "qwen_api_key", "api_key_qwen_enc"),
+            ("deepseek_clear", "deepseek_api_key", "api_key_deepseek_enc"),
+            ("gpt_clear", "gpt_api_key", "api_key_openai_enc"),
+        ]
+        for clear_flag, key_field, enc_attr in updates:
+            if d.get(clear_flag):
+                setattr(profile, enc_attr, "")
+                continue
+            val = (d.get(key_field) or "").strip()
+            if val:
+                setattr(profile, enc_attr, encrypt_secret(val))
+
+        profile.save()
+        user = User.objects.select_related("profile").get(pk=request.user.pk)
         return Response(UserSerializer(user, context={"request": request}).data)
 
 

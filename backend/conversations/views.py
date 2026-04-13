@@ -9,8 +9,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.jwt_utils import get_user_from_jwt_request
+from accounts.user_llm_keys import (
+    build_deepseek_client,
+    build_openai_client,
+    build_qwen_client,
+)
 from agents.models import Agent
-from integrations.llm_clients.qwen_client import QwenClient
 from .models import Conversation, Message
 
 
@@ -113,6 +117,7 @@ class ConversationStreamView(View):
         if not _conversation_agent_active(conversation):
             return HttpResponse("Forbidden", status=403)
         agent = conversation.agent
+        started_by = conversation.started_by
 
         def event_stream():
             # 取历史消息，主要用来构造提示词
@@ -120,41 +125,59 @@ class ConversationStreamView(View):
                 conversation.messages.order_by("created_at").values("role", "content")
             )
 
-            # 如果选择 Qwen 模型，则调用 Qwen 接口；否则回退到本地假数据
             model_key = (agent.model_key or "").strip()
-            use_qwen = model_key.startswith("qwen")
+            mk = model_key.lower()
+            temp = agent.temperature or 0.7
+            sys_prompt = agent.description or ""
 
-            if use_qwen:
-                client = QwenClient()
+            def stream_with_client(client, label: str):
                 try:
-                    # 直接使用流式生成器，实时yield每个chunk
-                    # 这样不会有内容丢失，也不需要等待完整回答
                     for chunk in client.stream_chunks(
-                        system_prompt=agent.description or "",
+                        system_prompt=sys_prompt,
                         history=history,
                         model=model_key,
-                        temperature=agent.temperature or 0.7,
+                        temperature=temp,
                     ):
-                        # 检查是否被中止
                         conv = Conversation.objects.get(pk=conversation.pk)
                         if conv.aborted:
                             yield "data: [END]\n\n"
                             return
-                        
-                        # 实时发送每个chunk
                         if chunk:
                             yield f"data: {chunk}\n\n"
-                    
-                    # 流式输出完成
                     yield "data: [END]\n\n"
-                    return
-                        
                 except Exception as exc:
-                    # 调用失败时，将错误信息通过流返回给前端
-                    error_msg = f"调用 Qwen 模型失败：{exc}"
-                    yield f"data: **错误**：{error_msg}\n\n"
+                    yield f"data: **错误**：调用 {label} 失败：{exc}\n\n"
+                    yield "data: [END]\n\n"
+
+            if mk.startswith("qwen"):
+                try:
+                    client = build_qwen_client(started_by)
+                except Exception as exc:
+                    yield f"data: **错误**：{exc}\n\n"
                     yield "data: [END]\n\n"
                     return
+                yield from stream_with_client(client, "Qwen")
+                return
+
+            if mk.startswith("deepseek"):
+                try:
+                    client = build_deepseek_client(started_by)
+                except Exception as exc:
+                    yield f"data: **错误**：{exc}\n\n"
+                    yield "data: [END]\n\n"
+                    return
+                yield from stream_with_client(client, "DeepSeek")
+                return
+
+            if mk.startswith("gpt"):
+                try:
+                    client = build_openai_client(started_by)
+                except Exception as exc:
+                    yield f"data: **错误**：{exc}\n\n"
+                    yield "data: [END]\n\n"
+                    return
+                yield from stream_with_client(client, "OpenAI")
+                return
 
             # 默认本地假数据回答
             last_user_msg = conversation.messages.filter(role="user").order_by("-created_at").first()

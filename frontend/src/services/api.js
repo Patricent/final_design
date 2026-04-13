@@ -123,3 +123,8 @@ export const AdminAgentAPI = {
     return normalizeAdminAgent(data)
   },
 }
+
+export async function patchUserApiKeys(payload) {
+  const { data } = await apiClient.patch('/auth/api-keys/', payload)
+  return data
+}

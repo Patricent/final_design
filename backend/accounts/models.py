@@ -9,6 +9,9 @@ class UserProfile(models.Model):
     nickname = models.CharField("昵称", max_length=50, blank=True)
     avatar = models.ImageField("头像", upload_to="avatars/", blank=True, null=True)
     bio = models.TextField("个人介绍", blank=True)
+    api_key_qwen_enc = models.TextField("Qwen API Key（加密）", blank=True, default="")
+    api_key_deepseek_enc = models.TextField("DeepSeek API Key（加密）", blank=True, default="")
+    api_key_openai_enc = models.TextField("OpenAI API Key（加密）", blank=True, default="")
 
     class Meta:
         db_table = "accounts_userprofile"

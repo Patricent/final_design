@@ -14,6 +14,10 @@ from integrations.llm_clients.qwen_client import QwenClient
 from .models import Conversation, Message
 
 
+def _agent_usable_by(user, agent: Agent) -> bool:
+    return agent.owner_id == user.id or agent.is_public
+
+
 class ConversationCreateView(APIView):
     """
     创建一个新的会话。
@@ -29,8 +33,10 @@ class ConversationCreateView(APIView):
         if not agent_id:
             return Response({"detail": "agent_id 是必填项"}, status=status.HTTP_400_BAD_REQUEST)
 
-        agent = get_object_or_404(Agent, pk=agent_id, owner=request.user)
-        conv = Conversation.objects.create(agent=agent)
+        agent = get_object_or_404(Agent, pk=agent_id)
+        if not _agent_usable_by(request.user, agent):
+            return Response({"detail": "无权使用该智能体"}, status=status.HTTP_403_FORBIDDEN)
+        conv = Conversation.objects.create(agent=agent, started_by=request.user)
 
         data = {"id": conv.id, "history": []}
         return Response(data, status=status.HTTP_201_CREATED)
@@ -49,7 +55,7 @@ class MessageCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk: int):
-        conversation = get_object_or_404(Conversation, pk=pk, agent__owner=request.user)
+        conversation = get_object_or_404(Conversation, pk=pk, started_by=request.user)
 
         content = request.data.get("content", "").strip()
         if not content:
@@ -69,7 +75,7 @@ class ConversationAbortView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk: int):
-        conversation = get_object_or_404(Conversation, pk=pk, agent__owner=request.user)
+        conversation = get_object_or_404(Conversation, pk=pk, started_by=request.user)
         conversation.aborted = True
         conversation.save(update_fields=["aborted"])
         return Response({"status": "aborted"}, status=status.HTTP_200_OK)
@@ -87,7 +93,7 @@ class ConversationStreamView(View):
         user = get_user_from_jwt_request(request)
         if not user:
             return HttpResponse("Unauthorized", status=401)
-        conversation = get_object_or_404(Conversation, pk=pk, agent__owner=user)
+        conversation = get_object_or_404(Conversation, pk=pk, started_by=user)
         agent = conversation.agent
 
         def event_stream():

@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -40,10 +41,12 @@ class AgentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # 兼容前端字段名：modelKey -> model_key
+        # 兼容前端字段名：modelKey -> model_key、isPublic -> is_public
         incoming = request.data.copy()
         if "modelKey" in incoming and "model_key" not in incoming:
             incoming["model_key"] = incoming["modelKey"]
+        if "isPublic" in incoming and "is_public" not in incoming:
+            incoming["is_public"] = incoming["isPublic"]
 
         # 如果传了 id 就更新，否则创建
         agent_id = incoming.get("id")
@@ -55,6 +58,23 @@ class AgentView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(owner=request.user)
 
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AgentSquareListView(APIView):
+    """
+    智能体广场：所有用户公开的智能体。
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        agents = (
+            Agent.objects.filter(is_public=True)
+            .select_related("owner")
+            .order_by("-updated_at")
+        )
+        serializer = AgentSerializer(agents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -79,7 +99,10 @@ class AgentDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        agent = get_object_or_404(Agent, pk=pk, owner=request.user)
+        agent = get_object_or_404(
+            Agent.objects.filter(Q(owner=request.user) | Q(is_public=True)),
+            pk=pk,
+        )
         serializer = AgentSerializer(agent)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

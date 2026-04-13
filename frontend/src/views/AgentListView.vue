@@ -96,6 +96,7 @@ onMounted(fetchAgents)
           <RouterLink class="ghost-link" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
           <button type="button" class="ghost-link" @click="logout">退出</button>
         </div>
+        <RouterLink class="secondary-btn" :to="{ name: 'agent-square' }">智能体广场</RouterLink>
         <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
           + 创建新智能体
         </RouterLink>
@@ -135,7 +136,10 @@ onMounted(fetchAgents)
         >
           <header class="agent-card__header">
             <h2>{{ agent.name || `智能体 #${agent.id}` }}</h2>
-            <span class="agent-card__model">{{ agent.modelLabel || agent.modelKey }}</span>
+            <div class="agent-card__tags">
+              <span class="agent-card__model">{{ agent.modelLabel || agent.modelKey }}</span>
+              <span v-if="agent.isPublic" class="agent-card__public">公开</span>
+            </div>
           </header>
           <p class="agent-card__description">
             {{ agent.description || '暂无描述' }}
@@ -228,6 +232,25 @@ onMounted(fetchAgents)
   cursor: pointer;
   text-decoration: underline;
   font-size: inherit;
+}
+
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--panel-bg-muted);
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.secondary-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(var(--accent-rgb), 0.45);
 }
 
 .primary-btn {
@@ -324,6 +347,21 @@ onMounted(fetchAgents)
 .agent-card__header h2 {
   margin: 0;
   font-size: 1.2rem;
+}
+
+.agent-card__tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.agent-card__public {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(34, 197, 94, 0.18);
+  color: rgba(15, 23, 42, 0.8);
 }
 
 .agent-card__model {

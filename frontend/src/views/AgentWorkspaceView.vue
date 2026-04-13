@@ -1,9 +1,10 @@
 <script setup>
 import { computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AgentForm from '../components/AgentForm/AgentForm.vue'
 import ConversationPanel from '../components/ConversationPanel/ConversationPanel.vue'
 import { useChatStore } from '../store/chatStore'
+import { authState } from '../store/authStore'
 
 const props = defineProps({
   id: {
@@ -20,11 +21,23 @@ const props = defineProps({
   },
 })
 
+const route = useRoute()
 const router = useRouter()
 const chatStore = useChatStore()
 
 const isNewAgent = computed(() => props.isNew || !props.id)
-const shouldShowEditor = computed(() => props.showEditor || props.isNew || !props.id)
+
+const isOwner = computed(() => {
+  if (isNewAgent.value) return true
+  const oid = chatStore.state.agentConfig.ownerId
+  if (oid == null) return true
+  return Number(authState.user?.id) === Number(oid)
+})
+
+const shouldShowEditor = computed(() => {
+  if (!isOwner.value) return false
+  return props.showEditor || props.isNew || !props.id
+})
 // 编辑模式和新建模式只显示编辑区，不显示对话
 const shouldShowConversation = computed(() => {
   // 如果是新建模式，不显示对话
@@ -47,7 +60,10 @@ const bootstrapWorkspace = async () => {
 }
 
 const handleAgentSubmit = async (payload) => {
-  const agent = await chatStore.upsertAgent(payload)
+  const agent = await chatStore.upsertAgent({
+    ...payload,
+    id: chatStore.state.agentConfig.id,
+  })
   if (agent?.id) {
     router.replace({ name: 'agent-workspace', params: { id: agent.id } })
   }
@@ -62,23 +78,30 @@ const handleAbort = () => {
 }
 
 const handleBack = () => {
+  if (route.query.from === 'square') {
+    router.push({ name: 'agent-square' })
+    return
+  }
   router.push({ name: 'agent-home' })
 }
 
 const handleEnterEdit = () => {
-  if (!props.id) return
+  if (!props.id || !isOwner.value) return
   router.push({
     name: 'agent-workspace',
     params: { id: props.id },
-    query: { edit: '1' },
+    query: { ...route.query, edit: '1' },
   })
 }
 
 const handleViewConversation = () => {
   if (!props.id) return
+  const q = { ...route.query }
+  delete q.edit
   router.push({
     name: 'agent-workspace',
     params: { id: props.id },
+    query: q,
   })
 }
 
@@ -108,10 +131,13 @@ watch(
     <header class="workspace__header">
       <div class="workspace__meta">
         <button class="ghost-btn" type="button" @click="handleBack">
-          ← 返回我的智能体
+          ← {{ route.query.from === 'square' ? '返回智能体广场' : '返回我的智能体' }}
         </button>
         <h1>{{ chatStore.state.agentConfig.name || (isNewAgent ? '新的智能体' : `智能体 #${id}`) }}</h1>
-        <p>设定角色、选择模型，立即开启对话</p>
+        <p v-if="!isOwner && !isNewAgent" class="workspace__banner">
+          公开智能体 · 创建者：{{ chatStore.state.agentConfig.ownerUsername || '未知' }}（仅可对话，不可修改配置）
+        </p>
+        <p v-else>设定角色、选择模型，立即开启对话</p>
       </div>
       <div class="workspace__actions">
         <div class="status">
@@ -119,7 +145,7 @@ watch(
           <span>{{ chatStore.state.isBackendReachable ? '后端在线' : '等待后端' }}</span>
         </div>
         <button
-          v-if="!isNewAgent && !shouldShowEditor"
+          v-if="!isNewAgent && isOwner && !shouldShowEditor"
           class="ghost-btn"
           type="button"
           @click="handleEnterEdit"
@@ -127,7 +153,7 @@ watch(
           编辑智能体
         </button>
         <button
-          v-else-if="!isNewAgent && shouldShowEditor"
+          v-else-if="!isNewAgent && isOwner && shouldShowEditor"
           class="ghost-btn"
           type="button"
           @click="handleViewConversation"
@@ -201,6 +227,12 @@ watch(
 .workspace__header p {
   margin: 0.25rem 0 0;
   color: var(--color-text-muted);
+}
+
+.workspace__banner {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }
 
 .ghost-btn {

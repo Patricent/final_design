@@ -46,7 +46,11 @@ const normalizeAgent = (agent = {}) => ({
   name: agent.name ?? '',
   description: agent.description ?? '',
   modelKey: agent.model_key ?? agent.modelKey ?? '',
+  modelLabel: agent.model_label ?? agent.modelLabel,
   temperature: agent.temperature ?? 0.7,
+  isPublic: Boolean(agent.is_public ?? agent.isPublic),
+  ownerId: agent.owner_id ?? agent.ownerId ?? null,
+  ownerUsername: agent.owner_username ?? agent.ownerUsername ?? '',
 })
 
 export const AgentAPI = {
@@ -56,6 +60,10 @@ export const AgentAPI = {
   },
   async listAgents() {
     const { data } = await apiClient.get('/agents/list/')
+    return (data ?? []).map(normalizeAgent)
+  },
+  async listSquareAgents() {
+    const { data } = await apiClient.get('/agents/square/')
     return (data ?? []).map(normalizeAgent)
   },
   async getAgent(agentId) {

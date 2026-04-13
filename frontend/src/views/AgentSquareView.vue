@@ -1,0 +1,302 @@
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { AgentAPI } from '../services/api'
+import { authState, clearTokens } from '../store/authStore'
+
+const router = useRouter()
+
+const displayName = computed(
+  () => authState.user?.nickname || authState.user?.username || '用户',
+)
+
+const logout = () => {
+  clearTokens()
+  router.push({ name: 'login' })
+}
+
+const agents = ref([])
+const isLoading = ref(false)
+const errorMessage = ref('')
+const searchTerm = ref('')
+
+const fetchSquare = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    agents.value = await AgentAPI.listSquareAgents()
+  } catch (e) {
+    console.error(e)
+    errorMessage.value = '加载广场失败，请稍后重试'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const openAgent = (agentId) => {
+  router.push({
+    name: 'agent-workspace',
+    params: { id: agentId },
+    query: { from: 'square' },
+  })
+}
+
+const filteredAgents = computed(() => {
+  if (!searchTerm.value?.trim()) return agents.value
+  const keyword = searchTerm.value.trim().toLowerCase()
+  return agents.value.filter((agent) => {
+    const haystack = [agent.name, agent.description, agent.modelKey, agent.ownerUsername]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    return haystack.includes(keyword)
+  })
+})
+
+onMounted(fetchSquare)
+</script>
+
+<template>
+  <div class="page">
+    <header class="page__header">
+      <div>
+        <h1>智能体广场</h1>
+        <p>浏览所有用户公开的智能体，点击进入对话（每人会话独立）</p>
+      </div>
+      <div class="page__header-actions">
+        <div class="user-bar">
+          <img v-if="authState.user?.avatar" :src="authState.user.avatar" alt="" class="user-bar__avatar" />
+          <span class="user-bar__name">{{ displayName }}</span>
+          <RouterLink class="ghost-link" :to="{ name: 'agent-home' }">我的智能体</RouterLink>
+          <RouterLink class="ghost-link" :to="{ name: 'profile-edit' }">编辑资料</RouterLink>
+          <button type="button" class="ghost-link" @click="logout">退出</button>
+        </div>
+        <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">+ 创建智能体</RouterLink>
+      </div>
+    </header>
+
+    <section class="page__content">
+      <div class="toolbar">
+        <input
+          v-model.trim="searchTerm"
+          class="search-input"
+          type="search"
+          placeholder="搜索名称 / 描述 / 模型 / 创建者..."
+        />
+      </div>
+      <div v-if="errorMessage" class="state state--error">{{ errorMessage }}</div>
+      <div v-else-if="isLoading" class="state">加载中...</div>
+      <div v-else-if="agents.length === 0" class="state">广场暂无公开智能体，去「我的智能体」勾选公开吧。</div>
+      <div v-else-if="filteredAgents.length === 0" class="state">没有匹配项</div>
+      <div v-else class="agent-grid">
+        <article
+          v-for="agent in filteredAgents"
+          :key="agent.id"
+          class="agent-card"
+          role="button"
+          tabindex="0"
+          @click="openAgent(agent.id)"
+          @keypress.enter="openAgent(agent.id)"
+        >
+          <header class="agent-card__header">
+            <h2>{{ agent.name || `智能体 #${agent.id}` }}</h2>
+            <span class="agent-card__badge">公开</span>
+          </header>
+          <p class="agent-card__owner">创建者：{{ agent.ownerUsername || '—' }}</p>
+          <p class="agent-card__description">{{ agent.description || '暂无描述' }}</p>
+          <footer class="agent-card__footer">
+            <span class="agent-card__model">{{ agent.modelLabel || agent.modelKey }}</span>
+            <span class="agent-card__link">开始对话 →</span>
+          </footer>
+        </article>
+      </div>
+    </section>
+  </div>
+</template>
+
+<style scoped>
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: var(--app-bg);
+  color: var(--color-text);
+}
+
+.page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+  gap: 1rem;
+}
+
+.page__header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.page__header p {
+  margin: 0.2rem 0 0;
+  color: var(--color-text-muted);
+}
+
+.page__header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.user-bar__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.ghost-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  background: var(--accent-color);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
+}
+
+.page__content {
+  flex: 1;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: min(360px, 100%);
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  background: var(--panel-bg-muted);
+  color: var(--color-text);
+}
+
+.state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.state--error {
+  color: #dc2626;
+}
+
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.agent-card {
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.agent-card:hover,
+.agent-card:focus-visible {
+  outline: none;
+  border-color: rgba(var(--accent-rgb), 0.65);
+  transform: translateY(-2px);
+}
+
+.agent-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.agent-card__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.agent-card__badge {
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(var(--accent-rgb), 0.2);
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.agent-card__owner {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.agent-card__description {
+  margin: 0;
+  min-height: 2.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.agent-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.agent-card__link {
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.7);
+}
+</style>

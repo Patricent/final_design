@@ -18,6 +18,7 @@ const props = defineProps({
       description: '',
       modelKey: '',
       temperature: 0.7,
+      isPublic: false,
     }),
   },
 })
@@ -29,6 +30,7 @@ const form = reactive({
   description: '',
   modelKey: '',
   temperature: 0.7,
+  isPublic: false,
 })
 
 watch(
@@ -89,6 +91,11 @@ const handleSubmit = () => {
       />
     </label>
 
+    <label class="field checkbox-row">
+      <input v-model="form.isPublic" type="checkbox" />
+      <span>公开到智能体广场（其他登录用户可见并与你一样发起对话）</span>
+    </label>
+
     <button class="primary" :disabled="loading" @click="handleSubmit">
       {{ loading ? '保存中...' : '保存智能体' }}
     </button>
@@ -141,6 +148,23 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.checkbox-row {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.checkbox-row input {
+  margin-top: 0.2rem;
+  width: auto;
+}
+
+.checkbox-row span {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
 }
 
 button.primary {

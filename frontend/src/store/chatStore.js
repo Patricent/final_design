@@ -8,6 +8,9 @@ const createEmptyAgent = () => ({
   description: '',
   modelKey: '',
   temperature: 0.7,
+  isPublic: false,
+  ownerId: null,
+  ownerUsername: '',
 })
 
 const state = reactive({

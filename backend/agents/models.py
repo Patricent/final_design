@@ -20,6 +20,7 @@ class Agent(models.Model):
     description = models.TextField(blank=True)
     model_key = models.CharField(max_length=100, blank=True)
     temperature = models.FloatField(default=0.7)
+    is_public = models.BooleanField("公开到广场", default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

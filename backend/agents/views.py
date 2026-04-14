@@ -47,6 +47,12 @@ class AgentView(APIView):
             incoming["model_key"] = incoming["modelKey"]
         if "isPublic" in incoming and "is_public" not in incoming:
             incoming["is_public"] = incoming["isPublic"]
+        if "kind" in incoming and isinstance(incoming["kind"], str):
+            incoming["kind"] = incoming["kind"].strip().lower()
+        if "imageWidth" in incoming and "image_width" not in incoming:
+            incoming["image_width"] = incoming["imageWidth"]
+        if "imageHeight" in incoming and "image_height" not in incoming:
+            incoming["image_height"] = incoming["imageHeight"]
 
         # 如果传了 id 就更新，否则创建
         agent_id = incoming.get("id")

@@ -5,10 +5,13 @@ import { openConversationStream } from '../services/streaming'
 const createEmptyAgent = () => ({
   id: null,
   name: '',
+  kind: 'chat',
   description: '',
   modelKey: '',
   temperature: 0.7,
   isPublic: false,
+  imageWidth: null,
+  imageHeight: null,
   ownerId: null,
   ownerUsername: '',
 })
@@ -42,7 +45,7 @@ async function fetchModels() {
 
 function assignAgentConfig(payload = {}) {
   Object.assign(state.agentConfig, createEmptyAgent(), payload)
-  if (!state.agentConfig.modelKey && state.models.length > 0) {
+  if (state.agentConfig.kind !== 'image' && !state.agentConfig.modelKey && state.models.length > 0) {
     state.agentConfig.modelKey = state.models[0].key
   }
 }

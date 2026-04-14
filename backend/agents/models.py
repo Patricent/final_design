@@ -8,6 +8,9 @@ class Agent(models.Model):
     每个智能体归属于创建者，仅本人可见与操作。
     """
 
+    KIND_CHAT = "chat"
+    KIND_IMAGE = "image"
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -17,8 +20,16 @@ class Agent(models.Model):
         blank=True,
     )
     name = models.CharField(max_length=100, blank=True)
+    kind = models.CharField(
+        "类型",
+        max_length=20,
+        default=KIND_CHAT,
+        db_index=True,
+    )
     description = models.TextField(blank=True)
     model_key = models.CharField(max_length=100, blank=True)
+    image_width = models.PositiveIntegerField("文生图宽度", null=True, blank=True)
+    image_height = models.PositiveIntegerField("文生图高度", null=True, blank=True)
     temperature = models.FloatField(default=0.7)
     is_public = models.BooleanField("公开到广场", default=False)
     is_deleted = models.BooleanField("已删除", default=False, db_index=True)

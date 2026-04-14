@@ -61,7 +61,7 @@ onMounted(fetchSquare)
     <header class="page__header">
       <div class="page__title-block">
         <h1>智能体广场</h1>
-        <p>浏览所有用户公开的智能体，点击进入对话（每人会话独立）</p>
+        <p>浏览所有用户公开的智能体：对话类可聊天，文生图类在工作区生成图片</p>
       </div>
       <div class="page__header-aside">
         <div class="user-bar">
@@ -81,6 +81,9 @@ onMounted(fetchSquare)
             管理后台
           </RouterLink>
           <RouterLink class="header-square-btn" :to="{ name: 'agent-home' }">我的智能体</RouterLink>
+          <RouterLink class="header-cta-admin" :to="{ name: 'agent-create-image' }">
+            + 新建文生图
+          </RouterLink>
           <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">+ 创建新智能体</RouterLink>
         </div>
       </div>
@@ -111,13 +114,18 @@ onMounted(fetchSquare)
         >
           <header class="agent-card__header">
             <h2>{{ agent.name || `智能体 #${agent.id}` }}</h2>
-            <span class="agent-card__badge">公开</span>
+            <div class="agent-card__badges">
+              <span v-if="agent.kind === 'image'" class="agent-card__badge agent-card__badge--kind">文生图</span>
+              <span class="agent-card__badge">公开</span>
+            </div>
           </header>
           <p class="agent-card__owner">创建者：{{ agent.ownerUsername || '—' }}</p>
           <p class="agent-card__description">{{ agent.description || '暂无描述' }}</p>
           <footer class="agent-card__footer">
             <span class="agent-card__model">{{ agent.modelLabel || agent.modelKey }}</span>
-            <span class="agent-card__link">开始对话 →</span>
+            <span class="agent-card__link">
+              {{ agent.kind === 'image' ? '文生图 →' : '开始对话 →' }}
+            </span>
           </footer>
         </article>
       </div>
@@ -332,13 +340,25 @@ onMounted(fetchSquare)
   font-size: 1.2rem;
 }
 
-.agent-card__badge {
+.agent-card__badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
   flex-shrink: 0;
+}
+
+.agent-card__badge {
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   font-size: 0.75rem;
   background: rgba(var(--accent-rgb), 0.2);
   color: rgba(15, 23, 42, 0.75);
+}
+
+.agent-card__badge--kind {
+  background: rgba(168, 85, 247, 0.22);
+  color: rgba(15, 23, 42, 0.82);
 }
 
 .agent-card__owner {

@@ -44,11 +44,14 @@ apiClient.interceptors.response.use(
 const normalizeAgent = (agent = {}) => ({
   id: agent.id ?? null,
   name: agent.name ?? '',
+  kind: agent.kind ?? 'chat',
   description: agent.description ?? '',
   modelKey: agent.model_key ?? agent.modelKey ?? '',
   modelLabel: agent.model_label ?? agent.modelLabel,
   temperature: agent.temperature ?? 0.7,
   isPublic: Boolean(agent.is_public ?? agent.isPublic),
+  imageWidth: agent.image_width ?? agent.imageWidth ?? null,
+  imageHeight: agent.image_height ?? agent.imageHeight ?? null,
   ownerId: agent.owner_id ?? agent.ownerId ?? null,
   ownerUsername: agent.owner_username ?? agent.ownerUsername ?? '',
 })
@@ -97,6 +100,17 @@ export const AgentAPI = {
   },
   async abortConversation(conversationId) {
     const { data } = await apiClient.post(`/conversations/${conversationId}/abort/`)
+    return data
+  },
+}
+
+export const ImageGenAPI = {
+  async submit(payload) {
+    const { data } = await apiClient.post('/image-gen/submit/', payload, { timeout: 120000 })
+    return data
+  },
+  async result(payload) {
+    const { data } = await apiClient.post('/image-gen/result/', payload, { timeout: 120000 })
     return data
   },
 }

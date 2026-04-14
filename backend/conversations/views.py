@@ -46,6 +46,11 @@ class ConversationCreateView(APIView):
         agent = get_object_or_404(Agent.objects.filter(is_deleted=False), pk=agent_id)
         if not _agent_usable_by(request.user, agent):
             return Response({"detail": "无权使用该智能体"}, status=status.HTTP_403_FORBIDDEN)
+        if agent.kind == Agent.KIND_IMAGE:
+            return Response(
+                {"detail": "文生图智能体请使用「生成图片」功能，不支持对话会话"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         conv = Conversation.objects.create(agent=agent, started_by=request.user)
 
         data = {"id": conv.id, "history": []}
@@ -70,6 +75,11 @@ class MessageCreateView(APIView):
             return Response(
                 {"detail": "该智能体已不可用"},
                 status=status.HTTP_403_FORBIDDEN,
+            )
+        if conversation.agent.kind == Agent.KIND_IMAGE:
+            return Response(
+                {"detail": "文生图智能体不支持对话"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         content = request.data.get("content", "").strip()
@@ -116,6 +126,8 @@ class ConversationStreamView(View):
         conversation = get_object_or_404(Conversation, pk=pk, started_by=user)
         if not _conversation_agent_active(conversation):
             return HttpResponse("Forbidden", status=403)
+        if conversation.agent.kind == Agent.KIND_IMAGE:
+            return HttpResponse("Bad Request", status=400)
         agent = conversation.agent
         started_by = conversation.started_by
 

@@ -87,7 +87,7 @@ onMounted(fetchAgents)
     <header class="page__header">
       <div class="page__title-block">
         <h1>我的智能体</h1>
-        <p>仅展示当前账号下的智能体，点击即可继续对话</p>
+        <p>仅展示当前账号下的智能体；对话类可继续聊天，文生图类在工作区生成图片</p>
       </div>
       <div class="page__header-aside">
         <div class="user-bar">
@@ -107,6 +107,9 @@ onMounted(fetchAgents)
             管理后台
           </RouterLink>
           <RouterLink class="header-square-btn" :to="{ name: 'agent-square' }">智能体广场</RouterLink>
+          <RouterLink class="header-cta-admin" :to="{ name: 'agent-create-image' }">
+            + 新建文生图
+          </RouterLink>
           <RouterLink class="primary-btn" :to="{ name: 'agent-create' }">
             + 创建新智能体
           </RouterLink>
@@ -148,6 +151,7 @@ onMounted(fetchAgents)
           <header class="agent-card__header">
             <h2>{{ agent.name || `智能体 #${agent.id}` }}</h2>
             <div class="agent-card__tags">
+              <span v-if="agent.kind === 'image'" class="agent-card__kind">文生图</span>
               <span class="agent-card__model">{{ agent.modelLabel || agent.modelKey }}</span>
               <span v-if="agent.isPublic" class="agent-card__public">公开</span>
             </div>
@@ -157,8 +161,13 @@ onMounted(fetchAgents)
           </p>
           <footer class="agent-card__footer">
             <div class="agent-card__meta">
-              <span>温度：{{ agent.temperature ?? '--' }}</span>
-              <span class="agent-card__link">查看对话 →</span>
+              <span v-if="agent.kind === 'image'">
+                尺寸：{{ agent.imageWidth ?? '—' }}×{{ agent.imageHeight ?? '—' }}
+              </span>
+              <span v-else>温度：{{ agent.temperature ?? '--' }}</span>
+              <span class="agent-card__link">
+                {{ agent.kind === 'image' ? '打开文生图 →' : '查看对话 →' }}
+              </span>
             </div>
             <div class="agent-card__actions">
               <button class="ghost-btn" type="button" @click.stop="handleEdit(agent.id)">
@@ -400,6 +409,14 @@ onMounted(fetchAgents)
   flex-direction: column;
   align-items: flex-end;
   gap: 0.35rem;
+}
+
+.agent-card__kind {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(168, 85, 247, 0.2);
+  color: rgba(15, 23, 42, 0.82);
 }
 
 .agent-card__public {

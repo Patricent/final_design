@@ -70,7 +70,13 @@ const router = createRouter({
       path: '/agents/new',
       name: 'agent-create',
       component: AgentWorkspaceView,
-      props: { isNew: true, showEditor: true },
+      props: { isNew: true, showEditor: true, agentKind: 'chat' },
+    },
+    {
+      path: '/agents/new-image',
+      name: 'agent-create-image',
+      component: AgentWorkspaceView,
+      props: { isNew: true, showEditor: true, agentKind: 'image' },
     },
     {
       path: '/agents/:id(\\d+)',

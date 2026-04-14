@@ -3,6 +3,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AgentForm from '../components/AgentForm/AgentForm.vue'
 import ConversationPanel from '../components/ConversationPanel/ConversationPanel.vue'
+import ImageGenPanel from '../components/ImageGenPanel/ImageGenPanel.vue'
 import { useChatStore } from '../store/chatStore'
 import { authState } from '../store/authStore'
 
@@ -18,6 +19,10 @@ const props = defineProps({
   showEditor: {
     type: Boolean,
     default: false,
+  },
+  agentKind: {
+    type: String,
+    default: 'chat',
   },
 })
 
@@ -38,20 +43,40 @@ const shouldShowEditor = computed(() => {
   if (!isOwner.value) return false
   return props.showEditor || props.isNew || !props.id
 })
-// 编辑模式和新建模式只显示编辑区，不显示对话
+
+const isImageAgent = computed(() => chatStore.state.agentConfig.kind === 'image')
+
 const shouldShowConversation = computed(() => {
-  // 如果是新建模式，不显示对话
   if (props.isNew || !props.id) return false
-  // 如果是编辑模式（showEditor=true），不显示对话
   if (props.showEditor) return false
-  // 默认查看对话模式，显示对话
+  if (chatStore.state.agentConfig.kind === 'image') return false
   return true
+})
+
+const shouldShowImagePanel = computed(() => {
+  if (props.isNew || !props.id || props.showEditor) return false
+  return chatStore.state.agentConfig.kind === 'image'
+})
+
+const workspaceBodyClass = computed(() => {
+  const dual =
+    shouldShowEditor.value && (shouldShowConversation.value || shouldShowImagePanel.value)
+  return { 'single-column': !dual }
 })
 
 const bootstrapWorkspace = async () => {
   await chatStore.bootstrap()
   if (isNewAgent.value) {
     chatStore.prepareNewAgent()
+    if (props.agentKind === 'image') {
+      Object.assign(chatStore.state.agentConfig, {
+        kind: 'image',
+        modelKey: 'high_aes_general_v30l_zt2i',
+        name: '我的文生图',
+        imageWidth: 1328,
+        imageHeight: 1328,
+      })
+    }
     return
   }
   if (props.id) {
@@ -121,6 +146,15 @@ watch(
   (flag) => {
     if (flag) {
       chatStore.prepareNewAgent()
+      if (props.agentKind === 'image') {
+        Object.assign(chatStore.state.agentConfig, {
+          kind: 'image',
+          modelKey: 'high_aes_general_v30l_zt2i',
+          name: '我的文生图',
+          imageWidth: 1328,
+          imageHeight: 1328,
+        })
+      }
     }
   },
 )
@@ -135,8 +169,11 @@ watch(
         </button>
         <h1>{{ chatStore.state.agentConfig.name || (isNewAgent ? '新的智能体' : `智能体 #${id}`) }}</h1>
         <p v-if="!isOwner && !isNewAgent" class="workspace__banner">
-          公开智能体 · 创建者：{{ chatStore.state.agentConfig.ownerUsername || '未知' }}（仅可对话，不可修改配置）
+          公开智能体 · 创建者：{{ chatStore.state.agentConfig.ownerUsername || '未知' }}（{{
+            isImageAgent ? '仅可生成图片' : '仅可对话'
+          }}，不可修改配置）
         </p>
+        <p v-else-if="isImageAgent">配置名称与出图尺寸，保存后在右侧输入提示词生成图片</p>
         <p v-else>设定角色、选择模型，立即开启对话</p>
       </div>
       <div class="workspace__actions">
@@ -158,12 +195,12 @@ watch(
           type="button"
           @click="handleViewConversation"
         >
-          返回对话
+          {{ isImageAgent ? '返回生成' : '返回对话' }}
         </button>
       </div>
     </header>
 
-    <main class="workspace__body" :class="{ 'single-column': !shouldShowEditor || !shouldShowConversation }">
+    <main class="workspace__body" :class="workspaceBodyClass">
       <section v-if="shouldShowEditor" class="panel agent-panel">
         <AgentForm
           :models="chatStore.state.models"
@@ -181,6 +218,10 @@ watch(
           @send="handleSendMessage"
           @abort="handleAbort"
         />
+      </section>
+
+      <section v-if="shouldShowImagePanel" class="panel image-gen-panel">
+        <ImageGenPanel :agent-id="id" />
       </section>
     </main>
 
@@ -294,10 +335,15 @@ watch(
   overflow: hidden;
 }
 
-.conversation-panel {
+.conversation-panel,
+.image-gen-panel {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.image-gen-panel {
+  overflow: auto;
 }
 
 .error-banner {

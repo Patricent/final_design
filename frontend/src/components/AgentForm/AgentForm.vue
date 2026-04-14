@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import ModelSelector from './ModelSelector.vue'
 
 const props = defineProps({
@@ -27,10 +27,13 @@ const emit = defineEmits(['submit'])
 
 const form = reactive({
   name: '',
+  kind: 'chat',
   description: '',
   modelKey: '',
   temperature: 0.7,
   isPublic: false,
+  imageWidth: 1328,
+  imageHeight: 1328,
 })
 
 watch(
@@ -44,22 +47,35 @@ watch(
 watch(
   () => props.models,
   (models) => {
-    if (!form.modelKey && models?.length) {
+    if (form.kind !== 'image' && !form.modelKey && models?.length) {
       form.modelKey = models[0].key
     }
   },
   { immediate: true },
 )
 
+const isImage = computed(() => form.kind === 'image')
+
 const handleSubmit = () => {
-  emit('submit', { ...form })
+  const payload = { ...form }
+  if (payload.kind === 'image') {
+    payload.imageWidth = Number(payload.imageWidth) || 1328
+    payload.imageHeight = Number(payload.imageHeight) || 1328
+  }
+  emit('submit', payload)
 }
 </script>
 
 <template>
   <div class="agent-form">
-    <h2>智能体设定</h2>
-    <p class="hint">配置角色、描述与模型，保存后即可开启会话</p>
+    <h2>{{ isImage ? '文生图智能体' : '智能体设定' }}</h2>
+    <p class="hint">
+      {{
+        isImage
+          ? '使用火山引擎文生图通用 3.0（high_aes_general_v30l_zt2i），保存后在右侧输入画面描述生成图片'
+          : '配置角色、描述与模型，保存后即可开启会话'
+      }}
+    </p>
 
     <label class="field">
       <span>角色名称</span>
@@ -67,17 +83,38 @@ const handleSubmit = () => {
     </label>
 
     <label class="field">
-      <span>角色描述 / 指令</span>
+      <span>{{ isImage ? '说明（可选）' : '角色描述 / 指令' }}</span>
       <textarea
         v-model="form.description"
         rows="4"
-        placeholder="描述智能体的背景、语气、行为规范……"
+        :placeholder="
+          isImage ? '可填写常用风格、用途等备注（不会自动拼进每次提示词）' : '描述智能体的背景、语气、行为规范……'
+        "
       />
     </label>
 
-    <ModelSelector v-model:model-key="form.modelKey" :options="models" :disabled="loading" />
+    <template v-if="isImage">
+      <div class="field-row">
+        <label class="field">
+          <span>宽度（512–2048）</span>
+          <input v-model.number="form.imageWidth" type="number" min="512" max="2048" step="8" />
+        </label>
+        <label class="field">
+          <span>高度（512–2048）</span>
+          <input v-model.number="form.imageHeight" type="number" min="512" max="2048" step="8" />
+        </label>
+      </div>
+      <p class="hint small">推荐 1:1 为 1328×1328；具体以火山引擎文档为准</p>
+    </template>
 
-    <label class="field slider">
+    <ModelSelector
+      v-if="!isImage"
+      v-model:model-key="form.modelKey"
+      :options="models"
+      :disabled="loading"
+    />
+
+    <label v-if="!isImage" class="field slider">
       <div>
         <span>温度（创造力）</span>
         <small>{{ form.temperature.toFixed(1) }}</small>
@@ -112,6 +149,23 @@ const handleSubmit = () => {
 .hint {
   margin: -0.5rem 0 0;
   color: var(--color-text-muted);
+}
+
+.hint.small {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 520px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .field {

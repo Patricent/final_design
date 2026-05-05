@@ -35,7 +35,7 @@ const submit = async () => {
     })
     setTokens(data.access, data.refresh)
     authState.user = data.user
-    router.replace('/')
+    router.replace('/agents')
   } catch (e) {
     const d = e?.response?.data
     if (typeof d === 'object' && d) {

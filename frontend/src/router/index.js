@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import HomeLandingView from '../views/HomeLandingView.vue'
 import AgentListView from '../views/AgentListView.vue'
 import AgentWorkspaceView from '../views/AgentWorkspaceView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -30,6 +31,12 @@ const router = createRouter({
     },
     {
       path: '/',
+      name: 'landing',
+      component: HomeLandingView,
+      meta: { public: true },
+    },
+    {
+      path: '/agents',
       name: 'agent-home',
       component: AgentListView,
     },
@@ -97,7 +104,7 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   if (to.meta.public) {
     if (isLoggedIn() && (to.name === 'login' || to.name === 'register')) {
-      return { path: '/' }
+      return { name: 'agent-home' }
     }
     return true
   }
@@ -113,7 +120,7 @@ router.beforeEach(async (to) => {
     }
   }
   if (to.meta.requiresAdmin && !authState.user?.is_staff) {
-    return { path: '/' }
+    return { name: 'agent-home' }
   }
   return true
 })

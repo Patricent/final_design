@@ -27,8 +27,9 @@ const submit = async () => {
     setTokens(data.access, data.refresh)
     const { data: me } = await apiClient.get('/auth/me/')
     authState.user = me
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-    router.replace(redirect || '/')
+    const raw = typeof route.query.redirect === 'string' ? route.query.redirect : null
+    const target = raw && raw !== '/' ? raw : '/agents'
+    router.replace(target)
   } catch (e) {
     errorMessage.value = e?.response?.data?.detail || '登录失败，请检查用户名或密码'
   } finally {

@@ -130,7 +130,6 @@ const moods = [
         </p>
         <p class="outro__note">
           本页为产品介绍与启程之地；核心技术栈含 Django、Vue、MySQL，以及面向大模型与视觉 API 的工程化接线。
-          创意文案独立于此，可随时按课程要求替换为你的学术表述。
         </p>
       </section>
     </main>

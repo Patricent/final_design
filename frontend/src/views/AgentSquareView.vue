@@ -311,7 +311,7 @@ onMounted(fetchSquare)
 
 .agent-card {
   box-sizing: border-box;
-  min-height: 280px;
+  min-height: 180px;
   height: 100%;
   padding: 1.25rem;
   border-radius: 16px;

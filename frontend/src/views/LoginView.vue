@@ -40,6 +40,7 @@ const submit = async () => {
 
 <template>
   <div class="auth-page">
+    <RouterLink class="auth-back" :to="{ name: 'landing' }">← 返回主页面</RouterLink>
     <div class="card">
       <h1>登录</h1>
       <p class="hint">登录后查看与管理你的智能体</p>
@@ -67,6 +68,7 @@ const submit = async () => {
 
 <style scoped>
 .auth-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -74,6 +76,22 @@ const submit = async () => {
   padding: 2rem;
   background: var(--app-bg);
   color: var(--color-text);
+}
+
+.auth-back {
+  position: absolute;
+  top: clamp(1rem, 3vw, 1.5rem);
+  left: clamp(1rem, 3vw, 1.5rem);
+  z-index: 1;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.auth-back:hover {
+  color: var(--color-heading);
 }
 
 .card {

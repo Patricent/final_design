@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AuthAmbientRobots from '../components/AuthAmbientRobots.vue'
 import { apiClient } from '../services/api'
 import { authState, setTokens } from '../store/authStore'
 
@@ -40,6 +41,7 @@ const submit = async () => {
 
 <template>
   <div class="auth-page">
+    <AuthAmbientRobots />
     <RouterLink class="auth-back" :to="{ name: 'landing' }">← 返回主页面</RouterLink>
     <div class="card">
       <h1>登录</h1>
@@ -82,7 +84,7 @@ const submit = async () => {
   position: absolute;
   top: clamp(1rem, 3vw, 1.5rem);
   left: clamp(1rem, 3vw, 1.5rem);
-  z-index: 1;
+  z-index: 2;
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--color-text-muted);
@@ -95,6 +97,8 @@ const submit = async () => {
 }
 
 .card {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 400px;
   padding: 2rem;

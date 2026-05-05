@@ -221,7 +221,7 @@ watch(
       </section>
 
       <section v-if="shouldShowImagePanel" class="panel image-gen-panel">
-        <ImageGenPanel :agent-id="id" />
+        <ImageGenPanel :agent-id="id" :initial-prompt="chatStore.state.agentConfig.description || ''" />
       </section>
     </main>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { ImageGenAPI } from '../../services/api'
 
 const props = defineProps({
@@ -7,9 +7,33 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  /** 智能体「说明/描述」：仅用于初始化画面描述本地草稿，修改不会回写智能体 */
+  initialPrompt: {
+    type: String,
+    default: '',
+  },
 })
 
 const prompt = ref('')
+/** 记录上次已同步过画面描述的智能体 id，用于切换智能体时重填、异步拉取描述后补填 */
+const lastSeededAgentId = ref(null)
+
+watch(
+  () => [props.agentId, props.initialPrompt ?? ''],
+  ([agentId, hint]) => {
+    if (agentId == null) return
+    const h = String(hint ?? '').trim()
+    if (lastSeededAgentId.value !== agentId) {
+      prompt.value = h
+      lastSeededAgentId.value = agentId
+      return
+    }
+    if (!prompt.value.trim() && h) {
+      prompt.value = h
+    }
+  },
+  { immediate: true },
+)
 const usePreLlm = ref(false)
 const busy = ref(false)
 const statusText = ref('')
@@ -75,6 +99,9 @@ const run = async () => {
 
     <label class="field">
       <span>画面描述（提示词）</span>
+      <span class="field__sub">
+        默认已带入左侧智能体「说明」中的文字，可直接修改；此处修改仅影响本次生成，不会改写智能体配置。
+      </span>
       <textarea v-model="prompt" rows="4" placeholder="主体 + 场景 + 风格与光影，可用英文写专业词" />
     </label>
 
@@ -131,8 +158,15 @@ const run = async () => {
   gap: 0.35rem;
 }
 
-.field span {
+.field > span:first-of-type {
   font-size: 0.95rem;
+}
+
+.field__sub {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: -0.15rem 0 0;
 }
 
 textarea {

@@ -371,9 +371,13 @@ onMounted(fetchAgents)
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1.25rem;
+  align-items: stretch;
 }
 
 .agent-card {
+  box-sizing: border-box;
+  min-height: 280px;
+  height: 100%;
   padding: 1.25rem;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.78);
@@ -402,6 +406,13 @@ onMounted(fetchAgents)
 .agent-card__header h2 {
   margin: 0;
   font-size: 1.2rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .agent-card__tags {
@@ -437,11 +448,21 @@ onMounted(fetchAgents)
 
 .agent-card__description {
   margin: 0;
-  min-height: 2.5rem;
+  flex: 0 0 auto;
+  height: 4.5rem;
   color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  word-break: break-word;
 }
 
 .agent-card__footer {
+  margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

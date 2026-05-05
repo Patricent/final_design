@@ -95,7 +95,7 @@ onMounted(fetchSquare)
           v-model.trim="searchTerm"
           class="search-input"
           type="search"
-          placeholder="搜索名称 / 描述 / 模型 / 创建者..."
+          placeholder="搜索名称 / 模型 / 创建者..."
         />
       </div>
       <div v-if="errorMessage" class="state state--error">{{ errorMessage }}</div>
@@ -120,7 +120,6 @@ onMounted(fetchSquare)
             </div>
           </header>
           <p class="agent-card__owner">创建者：{{ agent.ownerUsername || '—' }}</p>
-          <p class="agent-card__description">{{ agent.description || '暂无描述' }}</p>
           <footer class="agent-card__footer">
             <span class="agent-card__model">{{ agent.modelLabel || agent.modelKey }}</span>
             <span class="agent-card__link">
@@ -307,9 +306,13 @@ onMounted(fetchSquare)
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1.25rem;
+  align-items: stretch;
 }
 
 .agent-card {
+  box-sizing: border-box;
+  min-height: 280px;
+  height: 100%;
   padding: 1.25rem;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.78);
@@ -317,7 +320,7 @@ onMounted(fetchSquare)
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
@@ -338,6 +341,13 @@ onMounted(fetchSquare)
 .agent-card__header h2 {
   margin: 0;
   font-size: 1.2rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .agent-card__badges {
@@ -365,25 +375,32 @@ onMounted(fetchSquare)
   margin: 0;
   font-size: 0.85rem;
   color: var(--color-text-muted);
-}
-
-.agent-card__description {
-  margin: 0;
-  min-height: 2.5rem;
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
+  min-height: 1.35em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .agent-card__footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-top: auto;
   font-size: 0.9rem;
   color: var(--color-text-muted);
 }
 
+.agent-card__model {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .agent-card__link {
+  flex-shrink: 0;
   font-weight: 600;
   color: rgba(15, 23, 42, 0.7);
 }

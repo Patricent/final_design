@@ -54,7 +54,7 @@ const submit = async () => {
   <div class="auth-page">
     <div class="card">
       <h1>注册</h1>
-      <p class="hint">创建账号后，智能体列表仅对你可见</p>
+      <p class="hint"></p>
       <form @submit.prevent="submit">
         <label>
           <span>用户名</span>

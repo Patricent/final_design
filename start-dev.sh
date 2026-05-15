@@ -9,10 +9,18 @@ if [[ ! -x "$PY" ]]; then
   exit 1
 fi
 
-echo "[1/3] 数据库迁移..."
+echo "[0/4] 安装/更新 Python 依赖（含 Pillow，供头像 ImageField 使用）..."
+"$PY" -m pip install -r "${ROOT}/backend/requirements.txt"
+"$PY" -c "import PIL" 2>/dev/null || {
+  echo "Pillow 仍未就绪，尝试单独安装..."
+  "$PY" -m pip install "Pillow>=10.0.0"
+  "$PY" -c "import PIL"
+}
+
+echo "[1/4] 数据库迁移..."
 "$PY" "${ROOT}/backend/manage.py" migrate
 
-echo "[2/3] 启动后端 http://127.0.0.1:8000 （后台）..."
+echo "[2/4] 启动后端 http://127.0.0.1:8000 （后台）..."
 (
   cd "$ROOT"
   "$PY" backend/manage.py runserver 127.0.0.1:8000
@@ -24,6 +32,6 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "[3/3] 启动前端 http://127.0.0.1:5173 ..."
+echo "[3/4] 启动前端 http://127.0.0.1:5173 ..."
 cd "${ROOT}/frontend"
 npm run dev -- --host 127.0.0.1 --port 5173
